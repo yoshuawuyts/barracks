@@ -49,7 +49,7 @@ dispatcher.register = function(action, callback) {
  */
 
 dispatcher.dispatch = function(action, data) {
-  if (undefined == data) throw new Error('Dispatcher.dispatch: no data provided.');
+  if (undefined === data) throw new Error('Dispatcher.dispatch: no data provided.');
   var array = this.callbacks[action];
   if (undefined == array) throw new Error('Dispatcher.dispatch: action is not registered');
 

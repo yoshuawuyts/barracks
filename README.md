@@ -6,21 +6,18 @@
 An event dispatcher for the [flux architecture](http://facebook.github.io/react/blog/2014/05/06/flux.html).
 
 ## API
-__Initialize a dispatcher:__
 ````js
+// Initialize a dispatcher
 var Dispatcher = require('barracks');
 var dispatcher = Dispatcher();
-````
 
-__Register a new object:__
-````js
-var callbackFunction = function(arg) {/*side effect goes here*/};
-
+// Register a new object:
+var callbackFunction = function(arg) {
+  /*side effect goes here*/
+};
 dispatcher.register('eventName', callbackFunction);
-````
 
-__Dispatch the registered callbacks:__
-````js
+// Dispatch registered callbacks for 'eventName'
 dispatcher.dispatch('eventName');
 ````
 

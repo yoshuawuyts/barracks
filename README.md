@@ -8,7 +8,7 @@ An event dispatcher for the [flux architecture](http://facebook.github.io/react/
 ## API
 ````js
 /**
- * Initialize a dispatcher.
+ * Initialize barracks.
  */
 
 var Dispatcher = require('barracks');
@@ -26,7 +26,7 @@ dispatcher.register('eventName', callbackFunction);
 /**
  * Dispatch registered callbacks for 'eventName'.
  */
- 
+
 dispatcher.dispatch('eventName');
 ````
 

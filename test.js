@@ -22,29 +22,47 @@ describe('#dispatcher()', function () {
     it('should save the action', function (done) {
       var dispatcher = Dispatcher();
       dispatcher.register('test', function() {return 3});
-      dispatcher.callbacks[0].action.should.equal('test');
+      dispatcher.callbacks['test'].should.exist;
       done();
     });
 
     it('should save the callback', function (done) {
       var dispatcher = Dispatcher();
       dispatcher.register('test', function() {return 3});
-      dispatcher.callbacks[0].callback.call().should.equal(3);
+      dispatcher.callbacks['test'][0].call().should.equal(3);
       done();      
     });
   });
 
   describe('.dispatch()', function () {
+    describe('when no data argument is provided', function () {
+      it('should throw', function (done) {
+        var dispatcher = Dispatcher();
+        dispatcher.dispatch.bind(dispatcher, 'something')
+          .should.throw('Dispatcher.dispatch: no data provided.');
+
+        done();
+      });
+    });
+    describe('when the action is not found', function () {
+      it('should throw', function (done) {
+        var dispatcher = Dispatcher();
+        dispatcher.dispatch.bind(dispatcher, 'something', {})
+          .should.throw('Dispatcher.dispatch: action is not registered');
+          
+        done();
+      });
+    });
     describe('with only one item stored', function () {
       it('should trigger the callback when called', function (done) {
         var dispatcher = Dispatcher();
         var count = 0;
 
-        dispatcher.callbacks = [
-          {action: 'trigger', callback: function(arg) {count += arg}}
-        ];
+        dispatcher.callbacks = {
+          'trigger': [function(arg) {count += arg}]
+        };
 
-        dispatcher.dispatch('nothing', 3);
+        dispatcher.dispatch.bind(dispatcher, 'nothing', 3).should.throw();
         count.should.eql(0);
 
         dispatcher.dispatch('trigger', 3);
@@ -59,13 +77,15 @@ describe('#dispatcher()', function () {
         var dispatcher = Dispatcher();
         var count = 0;
 
-        dispatcher.callbacks = [
-          {action: 'trigger', callback: function(arg) {count += arg}},
-          {action: 'finger', callback: function(arg) {count += arg}},
-          {action: 'finger', callback: function(arg) {count += arg}}
-        ];
+        dispatcher.callbacks = {
+          'trigger': [function(arg) {count += arg}],
+          'finger': [
+            function(arg) {count += arg},
+            function(arg) {count += arg}
+          ]
+        };
 
-        dispatcher.dispatch('nothing', 3);
+        dispatcher.dispatch.bind(dispatcher, 'nothing', 3).should.throw();
         count.should.eql(0);
 
         dispatcher.dispatch('trigger', 3);

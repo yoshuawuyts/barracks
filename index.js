@@ -33,10 +33,8 @@ function Dispatcher() {
  */
 
 dispatcher.register = function(action, callback) {
-  this.callbacks.push({
-    action: action,
-    callback: callback
-  });
+  if (!this.callbacks[action]) this.callbacks[action] = [];
+  this.callbacks[action].push(callback);
 };
 
 /**
@@ -51,7 +49,11 @@ dispatcher.register = function(action, callback) {
  */
 
 dispatcher.dispatch = function(action, data) {
-  this.getCallbacks(action)
+  if (undefined == data) throw new Error('Dispatcher.dispatch: no data provided.');
+  var array = this.callbacks[action];
+  if (undefined == array) throw new Error('Dispatcher.dispatch: action is not registered');
+
+  this.callbacks[action]
     .forEach(function(callback) {
       callback.call(callback, data);
     });

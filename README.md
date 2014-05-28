@@ -28,6 +28,7 @@ dispatcher.register('eventName', callbackFunction);
  */
 
 dispatcher.dispatch('eventName');
+// -> 'I got triggered'
 ````
 
 ## License

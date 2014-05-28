@@ -13,8 +13,7 @@ module.exports = Dispatcher;
 /**
  * Dispatcher
  *
- * Adapted from https://github.com/lipsmack/flux/tree/master/lib/core.
- *
+ * @return {Object}
  * @api public
  */
 

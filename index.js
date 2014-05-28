@@ -1,14 +1,14 @@
 /**
- * Dispatcher prototype
- */
-
-var dispatcher = Dispatcher.prototype;
-
-/**
  * Exports
  */
 
 module.exports = Dispatcher;
+
+/**
+ * Dispatcher prototype
+ */
+
+var dispatcher = Dispatcher.prototype;
 
 /**
  * Dispatcher
@@ -52,8 +52,8 @@ dispatcher.register = function(action, callback) {
 
 dispatcher.dispatch = function(action, data) {
   this.getCallbacks(action)
-    .map(function(callback) {
-      return callback.call(callback, data);
+    .forEach(function(callback) {
+      callback.call(callback, data);
     });
 };
 

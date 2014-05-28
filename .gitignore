@@ -1,0 +1,11 @@
+# files
+*.log
+*.pid
+*.seed
+
+# folders
+logs/
+pids/
+build/
+coverage/
+node_modules/

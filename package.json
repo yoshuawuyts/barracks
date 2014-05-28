@@ -1,0 +1,31 @@
+{
+  "name": "barracks",
+  "version": "0.1.0",
+  "description": "An event dispatcher for the flux architecture",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha --recursive -R spec",
+    "coverage": "./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yoshuawuyts/barracks"
+  },
+  "keywords": [
+    "flux",
+    "dispatcher",
+    "react"
+  ],
+  "author": "Yoshua Wuyts <i@yoshuawuyts.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yoshuawuyts/barracks/issues"
+  },
+  "homepage": "https://github.com/yoshuawuyts/barracks",
+  "devDependencies": {
+    "should": "~3.3.2",
+    "mocha": "~1.19.0",
+    "istanbul": "~0.2.10",
+    "coveralls": "~2.10.0"
+  }
+}

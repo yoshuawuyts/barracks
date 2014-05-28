@@ -13,7 +13,7 @@ var dispatcher = Dispatcher();
 
 // Register a new object:
 var callbackFunction = function(arg) {
-  /*side effect goes here*/
+  console.log('I got triggered');
 };
 dispatcher.register('eventName', callbackFunction);
 

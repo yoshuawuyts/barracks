@@ -58,21 +58,3 @@ dispatcher.dispatch = function(action, data) {
       callback.call(callback, data);
     });
 };
-
-/**
- * Return registered callbacks.
- *
- * @param {String} action
- * @return {Function[]}
- * @api private
- */ 
-
-dispatcher.getCallbacks = function(action) {
-  return this.callbacks
-    .filter(function(callback) {
-      return callback.action === action;
-    })
-    .map(function(callback) {
-      return callback.callback;
-    });
-};

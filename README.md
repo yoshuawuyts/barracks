@@ -10,7 +10,7 @@ An event dispatcher for the [flux architecture](http://facebook.github.io/react/
 npm i --save barracks
 ````
 
-## Usage
+## Overview
 ````js
 /**
  * Initialize barracks.
@@ -23,10 +23,9 @@ var dispatcher = Dispatcher();
  * Register a new object.
  */
 
-var callbackFunction = function(arg) {
-  console.log(arg + ' got triggered');
-};
-dispatcher.register('eventName', callbackFunction);
+dispatcher.register('eventName', function(arg) {
+  return arg + ' got triggered';
+});
 
 /**
  * Dispatch registered callbacks for 'eventName'.
@@ -41,8 +40,13 @@ dispatcher.dispatch('eventName', 'Loki');
 Register a new object to the store. Takes a `{String} action` that determines the
 message it should respond to, and a `{Function} callback` that executes the response.
 ````js
-dispatcher.register('eventName', function(arg) {return arg});
-dispatcher.register('otherEvent', function() {return 'hi')});
+dispatcher.register('eventName', function(arg) {
+  return arg;
+});
+
+dispatcher.register('otherEvent', function() {
+  return 'hi';
+)});
 ````
 
 #### .dispatch()
@@ -52,7 +56,7 @@ argument of `{Mixed} data`.
 dispatcher.dispatch('eventName', 12);
 // -> 12
 
-dispatcher.dispatch('eventName');
+dispatcher.dispatch('otherEvent');
 // -> throw Error
 
 dispatcher.dispatch('otherEvent', null);

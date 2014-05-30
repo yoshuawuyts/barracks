@@ -20,7 +20,7 @@ var Dispatcher = require('barracks');
 var dispatcher = Dispatcher();
 
 /**
- * Register a new object.
+ * Register a new callback.
  */
 
 dispatcher.register('eventName', function(arg) {

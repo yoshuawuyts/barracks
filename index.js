@@ -53,9 +53,7 @@ dispatcher.dispatch = function(action, data) {
     'Dispatcher.dispatch: no data provided.'
   );
 
-  var array = this.callbacks[action];
-
-  if (undefined == array) throw new Error(
+  if (undefined == this.callbacks[action]) throw new Error(
     'Dispatcher.dispatch: action is not registered'
   );
 

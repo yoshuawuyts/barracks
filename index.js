@@ -39,8 +39,9 @@ function Dispatcher() {
  */
 
 dispatcher.register = function(action, callback) {
-  assert('string' == typeof action, 'dispatcher.register: provide a string as argument.');
-
+  assert('string' == typeof action, 'dispatcher.register: action must be a string');
+  assert('function' == typeof callback, 'dispatcher.register: callback must be a function');
+  
   if (!this.callbacks[action]) this.callbacks[action] = [];
   this.callbacks[action].push(callback);
 };

@@ -17,6 +17,22 @@ describe('#dispatcher()', function () {
       done();
     });
   });
+  describe('when a faulty action is provided', function () {
+    it('should throw', function (done) {
+      var dispatcher = Dispatcher();
+      dispatcher.register.bind(123, function() {return 3})
+        .should.throw('dispatcher.register: action must be a string');
+      done();
+    });
+  });
+  describe('when a faulty callback is provided', function () {
+    it('should throw', function (done) {
+      var dispatcher = Dispatcher();
+      dispatcher.register.bind('hello', 'not a function')
+        .should.throw('dispatcher.register: callback must be a function');
+      done();
+    });
+  });
 
   describe('.register()', function () {
     it('should save the action', function (done) {

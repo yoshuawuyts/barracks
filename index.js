@@ -1,4 +1,10 @@
 /**
+ * Module dependences
+ */
+
+var assert = require('assert');
+
+/**
  * Exports
  */
 
@@ -33,6 +39,8 @@ function Dispatcher() {
  */
 
 dispatcher.register = function(action, callback) {
+  assert('string' == typeof action, 'dispatcher.register: provide a string as argument.');
+
   if (!this.callbacks[action]) this.callbacks[action] = [];
   this.callbacks[action].push(callback);
 };
@@ -49,13 +57,8 @@ dispatcher.register = function(action, callback) {
  */
 
 dispatcher.dispatch = function(action, data) {
-  if (undefined === data) throw new Error(
-    'Dispatcher.dispatch: no data provided.'
-  );
-
-  if (undefined == this.callbacks[action]) throw new Error(
-    'Dispatcher.dispatch: action is not registered'
-  );
+  assert(undefined !== data, 'dispatcher.dispatch: no data provided');
+  assert(undefined != this.callbacks[action], 'dispatcher.dispatch: action is not registered');
 
   this.callbacks[action]
     .forEach(function(callback) {

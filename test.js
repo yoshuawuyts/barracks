@@ -39,7 +39,7 @@ describe('#dispatcher()', function () {
       it('should throw', function (done) {
         var dispatcher = Dispatcher();
         dispatcher.dispatch.bind(dispatcher, 'something')
-          .should.throw('Dispatcher.dispatch: no data provided.');
+          .should.throw('dispatcher.dispatch: no data provided');
 
         done();
       });
@@ -48,7 +48,7 @@ describe('#dispatcher()', function () {
       it('should throw', function (done) {
         var dispatcher = Dispatcher();
         dispatcher.dispatch.bind(dispatcher, 'something', {})
-          .should.throw('Dispatcher.dispatch: action is not registered');
+          .should.throw('dispatcher.dispatch: action is not registered');
           
         done();
       });

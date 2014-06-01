@@ -26,7 +26,7 @@ var dispatcher = Dispatcher.prototype;
 
 function Dispatcher() {
   if (!(this instanceof Dispatcher)) return new Dispatcher;
-  this.callbacks = [];
+  this.callbacks = {};
 };
 
 /**

@@ -27,5 +27,8 @@
     "mocha": "~1.19.0",
     "istanbul": "~0.2.10",
     "coveralls": "~2.10.0"
+  },
+  "dependencies": {
+    "debug": "~0.8.1"
   }
 }

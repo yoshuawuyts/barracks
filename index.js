@@ -2,6 +2,7 @@
  * Module dependences
  */
 
+var debug = require('debug')('barracks');
 var assert = require('assert');
 
 /**
@@ -41,6 +42,7 @@ function Dispatcher() {
 dispatcher.register = function(action, callback) {
   assert('string' == typeof action, 'dispatcher.register: action must be a string');
   assert('function' == typeof callback, 'dispatcher.register: callback must be a function');
+  debug('Registered action \'' + action + '\'.');
   
   if (!this.callbacks[action]) this.callbacks[action] = [];
   this.callbacks[action].push(callback);
@@ -60,6 +62,7 @@ dispatcher.register = function(action, callback) {
 dispatcher.dispatch = function(action, data) {
   assert(undefined !== data, 'dispatcher.dispatch: no data provided');
   assert(undefined != this.callbacks[action], 'dispatcher.dispatch: action is not registered');
+  debug('Dispatched action: \'' + action + '\'.');
 
   this.callbacks[action]
     .forEach(function(callback) {

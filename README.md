@@ -32,7 +32,7 @@ dispatcher.register('eventName', function(arg) {
  */
 
 dispatcher.dispatch('eventName', 'Loki');
-// -> 'Loki got triggered'
+// => 'Loki got triggered'
 ````
 
 ## API
@@ -54,13 +54,13 @@ Trigger all callbacks corresponding to `{String} action` and provide them an
 argument of `{Mixed} data`.
 ````js
 dispatcher.dispatch('eventName', 12);
-// -> 12
+// => 12
 
 dispatcher.dispatch('otherEvent');
-// -> throw Error
+// => throw Error
 
 dispatcher.dispatch('otherEvent', null);
-// -> 'hi'
+// => 'hi'
 ````
 
 

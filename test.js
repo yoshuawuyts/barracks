@@ -49,6 +49,15 @@ describe('#dispatcher()', function () {
       done();      
     });
   });
+    it('should allow for function composition', function (done) {
+      var dispatcher = Dispatcher();
+      dispatcher
+        .register('test', function() {return 3})
+        .register('derp', function() {return 4})
+
+      Object.keys(dispatcher.callbacks).length.should.eql(2);
+      done();
+    });
 
   describe('.dispatch()', function () {
     describe('when no data argument is provided', function () {

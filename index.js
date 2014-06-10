@@ -46,6 +46,8 @@ dispatcher.register = function(action, callback) {
   
   if (!this.callbacks[action]) this.callbacks[action] = [];
   this.callbacks[action].push(callback);
+
+  return this;
 };
 
 /**

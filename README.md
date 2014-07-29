@@ -55,9 +55,6 @@ dispatcher.dispatch('eventName', 12);
 // => 12
 
 dispatcher.dispatch('otherEvent');
-// => throw Error
-
-dispatcher.dispatch('otherEvent', null);
 // => 'hi'
 ````
 

@@ -62,7 +62,6 @@ dispatcher.register = function(action, callback) {
  */
 
 dispatcher.dispatch = function(action, data) {
-  assert(undefined !== data, 'dispatcher.dispatch: no data provided');
   assert(undefined != this.callbacks[action], 'dispatcher.dispatch: action is not registered');
   debug('Dispatched action \'' + action + '\'.');
 

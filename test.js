@@ -60,15 +60,6 @@ describe('#dispatcher()', function () {
     });
 
   describe('.dispatch()', function () {
-    describe('when no data argument is provided', function () {
-      it('should throw', function (done) {
-        var dispatcher = Dispatcher();
-        dispatcher.dispatch.bind(dispatcher, 'something')
-          .should.throw('dispatcher.dispatch: no data provided');
-
-        done();
-      });
-    });
     describe('when the action is not found', function () {
       it('should throw', function (done) {
         var dispatcher = Dispatcher();

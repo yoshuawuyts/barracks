@@ -49,14 +49,14 @@ describe('#dispatcher()', function () {
       done();      
     });
   });
-    it('should allow for function composition', function (done) {
+    it('should allow for function composition', function() {
       var dispatcher = Dispatcher();
       dispatcher
         .register('test', function() {return 3})
-        .register('derp', function() {return 4})
+        .register('derp', function() {return 4});
 
-      Object.keys(dispatcher.callbacks).length.should.eql(2);
-      done();
+      dispatcher.callbacks['test'][0]().should.eql(3);
+      dispatcher.callbacks['derp'][0]().should.eql(4);
     });
 
   describe('.dispatch()', function () {

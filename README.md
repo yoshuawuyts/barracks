@@ -1,5 +1,7 @@
 # Barracks
-[![NPM version][npm-image]][npm-url] [![build status][travis-image]][travis-url] [![Test coverage][coveralls-image]][coveralls-url]
+[![NPM version][npm-image]][npm-url] 
+[![build status][travis-image]][travis-url] 
+[![Test coverage][coveralls-image]][coveralls-url]
 
 An event dispatcher for the [flux architecture](http://facebook.github.io/react/blog/2014/05/06/flux.html). Best used with [browserify](https://github.com/substack/node-browserify).
 
@@ -14,8 +16,8 @@ npm i --save barracks
  * Initialize barracks.
  */
 
-var Dispatcher = require('barracks');
-var dispatcher = Dispatcher();
+var barracks = require('barracks');
+var dispatcher = barracks();
 
 /**
  * Register a new callback.

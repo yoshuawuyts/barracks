@@ -40,8 +40,8 @@ function Dispatcher() {
  */
 
 dispatcher.register = function(action, callback) {
-  assert('string' == typeof action, 'dispatcher.register: action must be a string');
-  assert('function' == typeof callback, 'dispatcher.register: callback must be a function');
+  assert('string' == typeof action, 'Action should be a string');
+  assert('function' == typeof callback, 'Callback should be a function');
   debug('Registered action \'' + action + '\'.');
   
   if (!this.callbacks[action]) this.callbacks[action] = [];
@@ -62,7 +62,7 @@ dispatcher.register = function(action, callback) {
  */
 
 dispatcher.dispatch = function(action, data) {
-  assert(undefined != this.callbacks[action], 'dispatcher.dispatch: action is not registered');
+  assert(undefined != this.callbacks[action], 'Action is not registered');
   debug('Dispatched action \'' + action + '\'.');
 
   this.callbacks[action]

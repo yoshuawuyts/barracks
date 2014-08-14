@@ -1,6 +1,6 @@
 # Barracks
-[![NPM version][npm-image]][npm-url] 
-[![build status][travis-image]][travis-url] 
+[![NPM version][npm-image]][npm-url]
+[![build status][travis-image]][travis-url]
 [![Test coverage][coveralls-image]][coveralls-url]
 
 An event dispatcher for the [flux architecture](http://facebook.github.io/react/blog/2014/05/06/flux.html). Best used with [browserify](https://github.com/substack/node-browserify).
@@ -63,9 +63,9 @@ dispatcher.dispatch('otherEvent');
 ## License
 [MIT](https://tldrlegal.com/license/mit-license) © [Yoshua Wuyts](yoshuawuyts.com)
 
-[npm-image]: https://img.shields.io/npm/v/barracks.svg?style=flat
+[npm-image]: https://img.shields.io/npm/v/barracks.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/barracks
-[travis-image]: https://img.shields.io/travis/yoshuawuyts/barracks.svg?style=flat
+[travis-image]: https://img.shields.io/travis/yoshuawuyts/barracks.svg?style=flat-square
 [travis-url]: https://travis-ci.org/yoshuawuyts/barracks
-[coveralls-image]: https://img.shields.io/coveralls/yoshuawuyts/barracks.svg?style=flat
+[coveralls-image]: https://img.shields.io/coveralls/yoshuawuyts/barracks.svg?style=flat-square
 [coveralls-url]: https://coveralls.io/r/yoshuawuyts/barracks?branch=master

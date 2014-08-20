@@ -73,11 +73,12 @@ function Dispatcher(actions) {
  */
 
 dispatcher.dispatch = function(action, data) {
-  assert(undefined != this.callbacks[action], 'Action is not registered');
-  debug('Dispatched action \'' + action + '\'.');
+  assert('string' == typeof action, 'Action should be a string');
 
-  this.callbacks[action]
-    .forEach(function(callback) {
-      callback.call(callback, data);
-    });
+  console.log(action.split(string, '-'));
+
+  // split the string
+  // call the namespace of the string.
+
+  debug('Dispatched action \'' + action + '\'.');
 };

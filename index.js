@@ -18,36 +18,47 @@ module.exports = Dispatcher;
 var dispatcher = Dispatcher.prototype;
 
 /**
- * Dispatcher
+ * Initialize the dispatcher with an
+ * 'actions' object.
+ *
+ *   dispatcher({
+ *     users: {
+ *       add: function() {},
+ *       remove: function() {}
+ *     },
+ *     courses: {
+ *       get: function() {},
+ *       put: function() {done()}
+ *     }
+ *   });
  *
  * @return {Object}
  * @api public
  */
 
-function Dispatcher() {
-  if (!(this instanceof Dispatcher)) return new Dispatcher;
-  this.callbacks = {};
-};
+function Dispatcher(actions) {
 
-/**
- * Register a new store.
- *
- *   dispatcher.register('update_course', callbackFunction);
- *
- * @param {String} action
- * @param {Function} callback
- * @api public
- */
+  if (!(this instanceof Dispatcher)) return new Dispatcher(actions);
 
-dispatcher.register = function(action, callback) {
-  assert('string' == typeof action, 'Action should be a string');
-  assert('function' == typeof callback, 'Callback should be a function');
-  debug('Registered action \'' + action + '\'.');
-  
-  if (!this.callbacks[action]) this.callbacks[action] = [];
-  this.callbacks[action].push(callback);
+  var existError = 'An \'actions\' object should be passed as an argument';
+  var nestedError = 'Namespaces should not be nested';
+  var functionError = 'Action should be a function';
+  var objectError = 'Actions should be an object';
 
-  return this;
+  assert('undefined' != typeof actions, existError);
+  assert('object' == typeof actions, objectError);
+  Object.keys(actions).forEach(function(key) {
+    var action = actions[key];
+    if ('object' == typeof action) {
+      Object.keys(action).forEach(function(nestedKey) {
+        var nestedAction = action[nestedKey];
+        assert('object' != typeof nestedAction, nestedError);
+        assert('function' == typeof nestedAction, functionError)
+      });
+    } else assert('function' == typeof actions[key], functionError);
+  });
+
+  this.actions = actions;
 };
 
 /**

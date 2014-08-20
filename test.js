@@ -10,50 +10,47 @@ var barracks = require('./index.js');
  */
 
 describe('#dispatcher()', function() {
+
   it('should catch errors', function() {
-    var dispatcher = barracks();
 
-    dispatcher.register.bind(123, function() {return 3})
-      .should.throw('Action should be a string');
-    dispatcher.register.bind('hello', 'not a function')
-      .should.throw('Callback should be a function');
+    barracks.bind(barracks)
+      .should.throw('An \'actions\' object should be passed as an argument');
+
+    var arg = 123;
+    barracks.bind(barracks, arg)
+      .should.throw('Actions should be an object');
+
+    arg = {users: 123};
+    barracks.bind(barracks, arg)
+      .should.throw('Action should be a function');
+
+    arg = {users: {add: 123}}
+    barracks.bind(barracks, arg)
+      .should.throw('Action should be a function');
+
+    arg = {users: {add: {veryMuch: 123}}}
+    barracks.bind(barracks, arg)
+      .should.throw('Namespaces should not be nested');
   });
-  it('should initialize empty properties', function() {
-    var dispatcher = barracks();
-    dispatcher.callbacks.should.be.empty;
-  });
-});
 
-describe('.register()', function() {
-  it('should catch errors', function() {
-    var dispatcher = barracks();
+  it('should save actions', function(done) {
+    var dispatcher = barracks({
+      users: {
+        add: function() {},
+        remove: function() {}
+      },
+      courses: {
+        get: function() {},
+        put: function() {done()}
+      }
+    });
 
-    dispatcher.register.bind(null, 123)
-      .should.throw('Action should be a string');
-
-    dispatcher.register.bind(null, 'hi', 123)
-      .should.throw('Callback should be a function');
-  });
-  it('should save actions', function() {
-    var dispatcher = barracks();
-
-    dispatcher.register('test', function() {return 3});
-    dispatcher.callbacks['test'].should.exist;
-  });
-  it('should save callbacks', function() {
-    var dispatcher = barracks();
-
-    dispatcher.register('test', function() {return 3});
-    dispatcher.callbacks['test'][0]().should.equal(3);   
-  });
-  it('should allow for function composition', function() {
-    var dispatcher = barracks();
-    dispatcher
-      .register('test', function() {return 3})
-      .register('derp', function() {return 4});
-
-    dispatcher.callbacks['test'][0]().should.eql(3);
-    dispatcher.callbacks['derp'][0]().should.eql(4);
+    dispatcher.actions.users.should.be.an.object;
+    dispatcher.actions.users.add.should.be.a.function;
+    dispatcher.actions.users.remove.should.be.a.function;
+    dispatcher.actions.courses.get.should.be.a.function;
+    dispatcher.actions.courses.put.should.be.a.function;
+    dispatcher.actions.courses.put()
   });
 });
 

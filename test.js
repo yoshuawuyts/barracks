@@ -55,41 +55,33 @@ describe('#dispatcher()', function() {
 });
 
 describe('.dispatch()', function() {
+
   it('should catch errors', function() {
-    var dispatcher = barracks();
+    var dispatcher = barracks({});
 
-    dispatcher.dispatch.bind(dispatcher, 'something', {})
-      .should.throw('Action is not registered');
-  });
-  it('should trigger the callback when called with n=1', function() {
-    var dispatcher = barracks();
-    var count = 0;
-    dispatcher.callbacks = {
-      'trigger': [function(arg) {count += arg}]
-    };
+    dispatcher.dispatch.bind(dispatcher, {})
+      .should.throw('Action should be a string');
 
-    dispatcher.dispatch.bind(dispatcher, 'nothing', 3).should.throw();
-    count.should.eql(0);
-    dispatcher.dispatch('trigger', 3);
-    count.should.eql(3);
-  });
-  it('should trigger the correct callback when called with n>1', function() {
-    var dispatcher = barracks();
-    var count = 0;
-    dispatcher.callbacks = {
-      'trigger': [function(arg) {count += arg}],
-      'finger': [
-        function(arg) {count += arg},
-        function(arg) {count += arg}
-      ]
-    };
+    dispatcher.dispatch.bind(dispatcher, 'something_is_odd')
+      .should.throw('Namespaces should not be nested');
 
-    dispatcher.dispatch.bind(dispatcher, 'nothing', 3).should.throw();
-    count.should.eql(0);
-    dispatcher.dispatch('trigger', 3);
-    count.should.eql(3);
-    count=0;
-    dispatcher.dispatch('finger', 4);
-    count.should.eql(8);
+    dispatcher.dispatch.bind(dispatcher, 'something')
+      .should.throw('Action \'something\' is not registered');
   });
+
+  it('should call actions', function(done) {
+
+    var dispatcher = barracks({
+      users: {
+        add: function() {},
+        remove: function() {}
+      },
+      courses: {
+        get: function() {},
+        put: function(fn) {fn()}
+      }
+    });
+
+    dispatcher.dispatch('courses_put', done);
+  })
 });

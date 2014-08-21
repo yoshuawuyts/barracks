@@ -64,7 +64,7 @@ function Dispatcher(actions) {
 /**
  * Dispatch event to stores.
  *
- *   dispatcher.dispatch('update_course', {id: 123, title: 'Tobi'});
+ *   dispatcher.dispatch('course_update', {id: 123, title: 'Tobi'});
  *
  * @param {String} action
  * @param {Object | Object[]} data
@@ -74,11 +74,22 @@ function Dispatcher(actions) {
 
 dispatcher.dispatch = function(action, data) {
   assert('string' == typeof action, 'Action should be a string');
+  var accessor = action.split('_');
 
-  console.log(action.split(string, '-'));
+  switch(accessor.length) {
+    case 1:
+      var fn = this.actions[accessor[0]];
+      break;
 
-  // split the string
-  // call the namespace of the string.
+    case 2:
+      var fn = this.actions[accessor[0]][accessor[1]];
+      break;
 
+    default:
+      throw new Error('Namespaces should not be nested');
+  }
+
+  assert('function' == typeof fn, 'Action \'' + action + '\' is not registered');
   debug('Dispatched action \'' + action + '\'.');
+  return fn(data);
 };

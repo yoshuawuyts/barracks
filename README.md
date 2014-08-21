@@ -3,61 +3,82 @@
 [![build status][travis-image]][travis-url]
 [![Test coverage][coveralls-image]][coveralls-url]
 
-An event dispatcher for the [flux architecture](http://facebook.github.io/react/blog/2014/05/06/flux.html). Best used with [browserify](https://github.com/substack/node-browserify).
+An event dispatcher for the [flux architecture][flux]. Best used with
+[browserify][browserify]. 
 
 ## Installation
-````
-npm i --save barracks
-````
+```bash
+$ npm i --save barracks
+```
 
 ## Overview
 ````js
 /**
- * Initialize barracks.
+ * Initialize a dispatcher.
  */
 
 var barracks = require('barracks');
-var dispatcher = barracks();
-
-/**
- * Register a new callback.
- */
-
-dispatcher.register('eventName', function(arg) {
-  return arg + ' got triggered';
+var dispatcher = barracks({
+  users: {
+    add: function(usr) {console.log(usr + ' got added')},
+    remove: function() {}
+  },
+  courses: {
+    get: function() {},
+    put: function() {}
+  }
 });
 
 /**
- * Dispatch registered callbacks for 'eventName'.
+ * Dispatch an event.
  */
 
-dispatcher.dispatch('eventName', 'Loki');
-// => 'Loki got triggered'
+dispatcher.dispatch('users_add', 'Loki');
+// => 'Loki got added'
 ````
 
 ## API
-#### .register()
-Register a new object to the store. Takes a `{String} action` that determines the
-message it should respond to, and a `{Function} callback` that executes the response.
-````js
-dispatcher.register('eventName', function(arg) {
-  return arg;
+#### barracks()
+Initialize a new `barracks` instance with an `{Object} actions` as an argument.
+The `actions` object should contain functions, namespaced at most one level
+deep.
+```js
+// Initialize without namespaces.
+var dispatcher = barracks({
+  user: function() {},
+  group: function() {}
 });
 
-dispatcher.register('otherEvent', function() {
-  return 'hi';
-)});
-````
+// Initialize with namespaces.
+var dispatcher = barracks({
+  users: {
+    add: function() {},
+    remove: function() {}
+  },
+  courses: {
+    get: function() {},
+    put: function() {}
+  }
+});
+```
 
 #### .dispatch()
-Trigger all callbacks corresponding to `{String} action` and provide them an
-argument of `{Mixed} data`.
-````js
-dispatcher.dispatch('eventName', 12);
-// => 12
+`dispatcher.dispatch()` takes an argument of `{String} action` and optional
+`{Any} data`. By dispatching an action you call the corresponding function from
+the dispatcher and pass it the data. You can think of it as just calling a
+function.
 
-dispatcher.dispatch('otherEvent');
-// => 'hi'
+In order to access namespaced functions you can delimit your string with
+underscores. So to access `courses.get` you'd dispatch the string `courses_get`.
+
+Keep in mind that since you can only namespace 1 level deep, your dispatched
+actions should have no more than one underscore in them.
+````js
+// Call a non-namespaced action.
+dispatcher.dispatch('group', [123, 'hello']);
+
+// Call a namespaced action.
+dispatcher.dispatch('users_add', {foo: 'bar'});
 ````
 
 ## License
@@ -69,3 +90,6 @@ dispatcher.dispatch('otherEvent');
 [travis-url]: https://travis-ci.org/yoshuawuyts/barracks
 [coveralls-image]: https://img.shields.io/coveralls/yoshuawuyts/barracks.svg?style=flat-square
 [coveralls-url]: https://coveralls.io/r/yoshuawuyts/barracks?branch=master
+
+[flux]: http://facebook.github.io/react/blog/2014/05/06/flux.html
+[browserify]: https://github.com/substack/node-browserify

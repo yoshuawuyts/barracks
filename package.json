@@ -29,6 +29,6 @@
     "coveralls": "~2.10.0"
   },
   "dependencies": {
-    "debug": "~0.8.1"
+    "debug": "^1.0.4"
   }
 }

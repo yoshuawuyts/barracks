@@ -72,8 +72,12 @@ function Dispatcher(actions) {
  * @api public
  */
 
-dispatcher.dispatch = function(action, data) {
+dispatcher.dispatch = function(action, data, cb) {
+  var cbError = 'Cb should be a function';
   assert('string' == typeof action, 'Action should be a string');
+  assert('function' == typeof cb || 'undefined' == typeof cb, cbError);
+
+  cb = cb || function() {};
   var accessor = action.split('_');
 
   switch(accessor.length) {
@@ -91,5 +95,7 @@ dispatcher.dispatch = function(action, data) {
 
   assert('function' == typeof fn, 'Action \'' + action + '\' is not registered');
   debug('Dispatched action \'' + action + '\'.');
-  return fn(data);
+  // Call the store and pass it the data
+  // and callback function.
+  fn(data, cb);
 };

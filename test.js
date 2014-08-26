@@ -83,5 +83,25 @@ describe('.dispatch()', function() {
     });
 
     dispatcher.dispatch('courses_put', done);
-  })
+  });
+
+  it('should call a callback when done', function(done) {
+
+    var dispatcher = barracks({
+      users: {
+        add: function() {},
+        remove: function() {}
+      },
+      courses: {
+        get: function() {},
+        put: function(value, cb) {cb(value)}
+      }
+    });
+
+    dispatcher.dispatch('courses_put', done, doneHandler);
+
+    function doneHandler(fn) {
+      fn();
+    }
+  });
 });

@@ -4,7 +4,7 @@
 [![Test coverage][coveralls-image]][coveralls-url]
 
 An event dispatcher for the [flux architecture][flux]. Best used with
-[browserify][browserify]. 
+[browserify][browserify].
 
 ## Installation
 ```bash
@@ -33,15 +33,14 @@ var dispatcher = barracks({
  * Dispatch an event.
  */
 
-dispatcher.dispatch('users_add', 'Loki');
+dispatcher('users_add', 'Loki');
 // => 'Loki got added'
 ````
 
 ## API
-#### barracks()
-Initialize a new `barracks` instance with an `{Object} actions` as an argument.
-The `actions` object should contain functions, namespaced at most one level
-deep.
+#### barracks(actions)
+Initialize a new `barracks` instance. The `actions` object should contain
+functions, namespaced at most one level deep. Returns a function.
 ```js
 // Initialize without namespaces.
 var dispatcher = barracks({
@@ -62,9 +61,9 @@ var dispatcher = barracks({
 });
 ```
 
-#### .dispatch()
-`dispatcher.dispatch()` takes an argument of `{String} action` and optional
-`{Any} data`. By dispatching an action you call the corresponding function from
+#### barracks(actions)(event, data)
+`barracks()` returns a dispatcher function which can be called to dispatch an
+action. By dispatching an action you call the corresponding function from
 the dispatcher and pass it the data. You can think of it as just calling a
 function.
 
@@ -75,10 +74,10 @@ Keep in mind that since you can only namespace 1 level deep, your dispatched
 actions should have no more than one underscore in them.
 ````js
 // Call a non-namespaced action.
-dispatcher.dispatch('group', [123, 'hello']);
+dispatcher('group', [123, 'hello']);
 
 // Call a namespaced action.
-dispatcher.dispatch('users_add', {foo: 'bar'});
+dispatcher('users_add', {foo: 'bar'});
 ````
 
 ## License

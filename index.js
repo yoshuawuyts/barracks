@@ -59,12 +59,14 @@ function Dispatcher(actions) {
   });
 
   this.actions = actions;
+
+  return dispatch.bind(this);
 };
 
 /**
  * Dispatch event to stores.
  *
- *   dispatcher.dispatch('course_update', {id: 123, title: 'Tobi'});
+ *   dispatcher()('course_update', {id: 123, title: 'Tobi'});
  *
  * @param {String} action
  * @param {Object | Object[]} data
@@ -72,7 +74,7 @@ function Dispatcher(actions) {
  * @api public
  */
 
-dispatcher.dispatch = function(action, data, cb) {
+function dispatch(action, data, cb) {
   var cbError = 'Cb should be a function';
   assert('string' == typeof action, 'Action should be a string');
   assert('function' == typeof cb || 'undefined' == typeof cb, cbError);

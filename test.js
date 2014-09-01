@@ -9,7 +9,7 @@ var barracks = require('./index.js');
  * Test
  */
 
-describe('#dispatcher()', function() {
+describe('dispatcher()', function() {
 
   it('should catch errors', function() {
 
@@ -33,7 +33,7 @@ describe('#dispatcher()', function() {
       .should.throw('Namespaces should not be nested');
   });
 
-  it('should save actions', function(done) {
+  it('should return a function', function() {
     var dispatcher = barracks({
       users: {
         add: function() {},
@@ -45,27 +45,22 @@ describe('#dispatcher()', function() {
       }
     });
 
-    dispatcher.actions.users.should.be.an.object;
-    dispatcher.actions.users.add.should.be.a.function;
-    dispatcher.actions.users.remove.should.be.a.function;
-    dispatcher.actions.courses.get.should.be.a.function;
-    dispatcher.actions.courses.put.should.be.a.function;
-    dispatcher.actions.courses.put()
+    dispatcher.should.be.type('function');
   });
 });
 
-describe('.dispatch()', function() {
+describe('dispatcher()()', function() {
 
   it('should catch errors', function() {
     var dispatcher = barracks({});
 
-    dispatcher.dispatch.bind(dispatcher, {})
+    dispatcher.bind(dispatcher, {})
       .should.throw('Action should be a string');
 
-    dispatcher.dispatch.bind(dispatcher, 'something_is_odd')
+    dispatcher.bind(dispatcher, 'something_is_odd')
       .should.throw('Namespaces should not be nested');
 
-    dispatcher.dispatch.bind(dispatcher, 'something')
+    dispatcher.bind(dispatcher, 'something')
       .should.throw('Action \'something\' is not registered');
   });
 
@@ -82,7 +77,7 @@ describe('.dispatch()', function() {
       }
     });
 
-    dispatcher.dispatch('courses_put', done);
+    dispatcher('courses_put', done);
   });
 
   it('should call a callback when done', function(done) {
@@ -98,7 +93,7 @@ describe('.dispatch()', function() {
       }
     });
 
-    dispatcher.dispatch('courses_put', done, doneHandler);
+    dispatcher('courses_put', done, doneHandler);
 
     function doneHandler(fn) {
       fn();

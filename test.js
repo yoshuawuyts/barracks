@@ -41,7 +41,7 @@ describe('dispatcher()', function() {
       },
       courses: {
         get: function() {},
-        put: function() {done()}
+        put: function() {}
       }
     });
 

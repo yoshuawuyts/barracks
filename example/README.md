@@ -7,7 +7,7 @@ If you're going to test this example you'll probably want to run it through
 If you encounter any bugs you can report them [here][issues].
 
 # modules
-- `modules/index`: render the React view on a DOM element.
+- `modules/index`: renders the React view on a DOM element.
 - `views/home`: contains the logic for setting up a React view.
 - `stores/user`: contains the user data and emits events. In larger applications
 the store would be the part responsible for talking to the backend.

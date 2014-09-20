@@ -92,10 +92,11 @@ function _handleDispatch(arr, index) {
   if ('object' == typeof val) return _handleDispatch.call(this, arr, index++);
 
   var fn = this._actions;
-  for (i = 0, j = arr.length; i < j; i++) fn = fn[arr[i]];
+  arr.forEach(function(obj, i) {
+    assert(fn[arr[i]], 'Action \'' + this._action + '\' is not registered');
+    fn = fn[arr[i]];
+  }.bind(this));
 
-  assert(fn, 'Action \'' + this._action + '\' is not registered');
   debug('Dispatched action \'' + this._action + '\'.');
-
   fn(this._payload, this._cb);
 }

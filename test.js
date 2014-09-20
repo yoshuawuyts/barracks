@@ -48,13 +48,18 @@ describe('dispatcher = barracks()', function() {
 describe('dispatcher()', function() {
 
   it('should catch errors', function() {
-    var dispatcher = barracks({});
+    var dispatcher = barracks({
+      foo: {bar: {baz: function(){}}}
+    });
 
     dispatcher.bind(dispatcher, {})
       .should.throw('Action should be a string');
 
     dispatcher.bind(dispatcher, 'something')
       .should.throw('Action \'something\' is not registered');
+
+    dispatcher.bind(dispatcher, 'foo_bar_baz_err')
+      .should.throw('Action \'foo_bar_baz_err\' is not registered');
   });
 
   it('should call actions', function(done) {

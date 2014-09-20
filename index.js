@@ -21,17 +21,6 @@ var dispatcher = Dispatcher.prototype;
  * Initialize the dispatcher with an
  * 'actions' object.
  *
- *   dispatcher({
- *     users: {
- *       add: function() {},
- *       remove: function() {}
- *     },
- *     courses: {
- *       get: function() {},
- *       put: function() {done()}
- *     }
- *   });
- *
  * @return {Object}
  * @api public
  */
@@ -40,22 +29,18 @@ function Dispatcher(actions) {
 
   if (!(this instanceof Dispatcher)) return new Dispatcher(actions);
 
-  var existError = 'An \'actions\' object should be passed as an argument';
-  var nestedError = 'Namespaces should not be nested';
-  var functionError = 'Action should be a function';
-  var objectError = 'Actions should be an object';
+  assert(actions, 'An \'actions\' object should be passed as an argument');
+  assert('object' == typeof actions, 'Actions should be an object');
 
-  assert('undefined' != typeof actions, existError);
-  assert('object' == typeof actions, objectError);
   Object.keys(actions).forEach(function(key) {
     var action = actions[key];
     if ('object' == typeof action) {
       Object.keys(action).forEach(function(nestedKey) {
         var nestedAction = action[nestedKey];
-        assert('object' != typeof nestedAction, nestedError);
-        assert('function' == typeof nestedAction, functionError)
+        assert('object' != typeof nestedAction, 'Namespaces should not be nested');
+        assert('function' == typeof nestedAction, 'Action should be a function');
       });
-    } else assert('function' == typeof actions[key], functionError);
+    } else assert('function' == typeof actions[key], 'Action should be a function');
   });
 
   this.actions = actions;
@@ -66,38 +51,46 @@ function Dispatcher(actions) {
 /**
  * Dispatch event to stores.
  *
- *   dispatcher()('course_update', {id: 123, title: 'Tobi'});
- *
  * @param {String} action
  * @param {Object | Object[]} data
  * @return {Function[]}
  * @api public
  */
 
-function dispatch(action, data, cb) {
-  var cbError = 'Cb should be a function';
+function dispatch(action, payload, cb) {
+
   assert('string' == typeof action, 'Action should be a string');
-  assert('function' == typeof cb || 'undefined' == typeof cb, cbError);
+  assert(!cb || 'function' == typeof cb, 'Callback should be a function');
 
-  cb = cb || function() {};
-  var accessor = action.split('_');
+  this._cb = cb || function() {};
+  this._payload = payload;
+  this._action = action;
 
-  switch(accessor.length) {
-    case 1:
-      var fn = this.actions[accessor[0]];
-      break;
+  var arr = action.split('_');
 
-    case 2:
-      var fn = this.actions[accessor[0]][accessor[1]];
-      break;
-
-    default:
-      throw new Error('Namespaces should not be nested');
-  }
-
-  assert('function' == typeof fn, 'Action \'' + action + '\' is not registered');
-  debug('Dispatched action \'' + action + '\'.');
-  // Call the store and pass it the data
-  // and callback function.
-  fn(data, cb);
+  _handleDispatch.call(this, arr, 0);
 };
+
+/**
+ * Handle the dispatched action. Traverses the call stack
+ * recursively until a function is found calling it with
+ * the given arguments.
+ *
+ * @param {String[]} arr
+ * @param {Number} index
+ * @api private
+ */
+
+function _handleDispatch(arr, index) {
+
+  var val = arr[index];
+  if ('object' == typeof val) return _handleDispatch.call(this, arr, index++);
+
+  var fn = this.actions;
+  for (i = 0, j = arr.length; i < j; i++) fn = fn[arr[i]];
+
+  assert('function' == typeof fn, 'Action \'' + this._action + '\' is not registered');
+  debug('Dispatched action \'' + this._action + '\'.');
+
+  fn(this._payload, this._cb);
+}

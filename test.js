@@ -9,7 +9,7 @@ var barracks = require('./index.js');
  * Test
  */
 
-describe('dispatcher()', function() {
+describe('dispatcher = barracks()', function() {
 
   it('should catch errors', function() {
 
@@ -27,10 +27,6 @@ describe('dispatcher()', function() {
     arg = {users: {add: 123}}
     barracks.bind(barracks, arg)
       .should.throw('Action should be a function');
-
-    arg = {users: {add: {veryMuch: 123}}}
-    barracks.bind(barracks, arg)
-      .should.throw('Namespaces should not be nested');
   });
 
   it('should return a function', function() {
@@ -49,16 +45,13 @@ describe('dispatcher()', function() {
   });
 });
 
-describe('dispatcher()()', function() {
+describe('dispatcher()', function() {
 
   it('should catch errors', function() {
     var dispatcher = barracks({});
 
     dispatcher.bind(dispatcher, {})
       .should.throw('Action should be a string');
-
-    dispatcher.bind(dispatcher, 'something_is_odd')
-      .should.throw('Namespaces should not be nested');
 
     dispatcher.bind(dispatcher, 'something')
       .should.throw('Action \'something\' is not registered');

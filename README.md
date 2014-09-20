@@ -38,7 +38,7 @@ dispatcher('users_add', 'Loki');
 ````
 
 ## API
-#### barracks(actions)
+#### dispatcher = barracks(actions)
 Initialize a new `barracks` instance. The `actions` object should contain
 functions, namespaced at most one level deep. Returns a function.
 ```js
@@ -61,7 +61,31 @@ var dispatcher = barracks({
 });
 ```
 
-#### barracks(actions)(event, data)
+#### dispatcher.waitFor(action)
+Execute another function within the dispatcher before proceeding. Registered
+callbacks are always bound to the scope of the dispatcher, so you can just
+call `this.waitFor` to access the function from within a registered callback.
+
+Calling `users_initalize` below will delegate execution to `user_add` and
+`user_listen` before proceeding to execute its own code.
+```js
+var dispatcher = barracks({
+  users: {
+    initialize: function() {
+      this.waitFor('user_add');
+      this.waitFor('user_listen');
+    },
+    add: function() {
+      // do async stuff
+    },
+    listen: function() {
+      // start listening to socket server
+    }
+  }
+});
+```
+
+#### dispatcher(action, data)
 `barracks()` returns a dispatcher function which can be called to dispatch an
 action. By dispatching an action you call the corresponding function from
 the dispatcher and pass it the data. You can think of it as just calling a

@@ -32,21 +32,26 @@ function Dispatcher(actions) {
   assert(actions, 'An \'actions\' object should be passed as an argument');
   assert('object' == typeof actions, 'Actions should be an object');
 
-  Object.keys(actions).forEach(function(key) {
-    var action = actions[key];
-    if ('object' == typeof action) {
-      Object.keys(action).forEach(function(nestedKey) {
-        var nestedAction = action[nestedKey];
-        assert('object' != typeof nestedAction, 'Namespaces should not be nested');
-        assert('function' == typeof nestedAction, 'Action should be a function');
-      });
-    } else assert('function' == typeof actions[key], 'Action should be a function');
-  });
-
-  this.actions = actions;
+  _assertActionsObject(actions);
+  this._actions = actions;
 
   return dispatch.bind(this);
 };
+
+/**
+ * Assert if the passed actions object is correct.
+ *
+ * @param {Object} actions
+ * @api private
+ */
+
+function _assertActionsObject(actions) {
+  Object.keys(actions).forEach(function(key) {
+    var action = actions[key];
+    if ('object' == typeof action) return _assertActionsObject(action);
+    assert('function' == typeof action, 'Action should be a function');
+  });
+}
 
 /**
  * Dispatch event to stores.
@@ -86,10 +91,10 @@ function _handleDispatch(arr, index) {
   var val = arr[index];
   if ('object' == typeof val) return _handleDispatch.call(this, arr, index++);
 
-  var fn = this.actions;
+  var fn = this._actions;
   for (i = 0, j = arr.length; i < j; i++) fn = fn[arr[i]];
 
-  assert('function' == typeof fn, 'Action \'' + this._action + '\' is not registered');
+  assert(fn, 'Action \'' + this._action + '\' is not registered');
   debug('Dispatched action \'' + this._action + '\'.');
 
   fn(this._payload, this._cb);

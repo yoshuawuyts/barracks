@@ -2,7 +2,6 @@
  * Module dependencies
  */
 
-var should = require('should');
 var barracks = require('./index.js');
 
 /**

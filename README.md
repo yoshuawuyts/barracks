@@ -3,8 +3,9 @@
 [![build status][travis-image]][travis-url]
 [![Test coverage][coveralls-image]][coveralls-url]
 
-An event dispatcher for the [flux architecture][flux]. Best used with
-[browserify][browserify].
+Event dispatcher for the [flux architecture][flux]. Provides event composition
+through `this.waitFor()`, checks for recursive calls while maintaining
+a simple interface (3 functions).
 
 ## Installation
 ```bash
@@ -20,12 +21,24 @@ $ npm i --save barracks
 var barracks = require('barracks');
 var dispatcher = barracks({
   users: {
-    add: function(usr) {console.log(usr + ' got added')},
-    remove: function() {}
+    add: function(user, done) {
+      console.log(user + ' got added');
+      done();
+    },
+    remove: function(user, done) {
+      console.log(user + ' was removed');
+      done();
+    }
   },
   courses: {
-    get: function() {},
-    put: function() {}
+    get: function(val, done) {
+      console.log('Get ' + val);
+      done();
+    },
+    set: function(val, done) {
+      console.log('Set ' + val);
+      done();
+    }
   }
 });
 
@@ -61,14 +74,33 @@ var dispatcher = barracks({
 });
 ```
 
+#### dispatcher(action, data)
+`barracks()` returns a dispatcher function which can be called to dispatch an
+action. By dispatching an action you call the corresponding function from
+the dispatcher and pass it the data. You can think of it as just calling a
+function.
+
+In order to access namespaced functions you can delimit your string with
+underscores. So to access `courses.get` you'd dispatch the string `courses_get`.
+````js
+// Call a non-namespaced action.
+dispatcher('group', [123, 'hello']);
+
+// Call a namespaced action.
+dispatcher('users_add', {foo: 'bar'});
+````
+
 #### dispatcher.waitFor(action)
 Execute another function within the dispatcher before proceeding. Registered
 callbacks are always bound to the scope of the dispatcher, so you can just
 call `this.waitFor` to access the function from within a registered callback.
 
-Calling `users_initalize` below will delegate execution to `user_add` and
+In the example below `users_initalize` will delegate execution to `user_add` and
 `user_listen` before proceeding to execute its own code.
 ```js
+var socket = require('sockjs-client');
+var request = require('request');
+
 var dispatcher = barracks({
   users: {
     initialize: function(done) {
@@ -84,30 +116,13 @@ var dispatcher = barracks({
       });
     },
     listen: function(done) {
-      // start listening to socket server
+      var sock = new socket('myapi.co/api/socket');
+      sock.onMessage(console.log);
+      done();
     }
   }
 });
 ```
-
-#### dispatcher(action, data)
-`barracks()` returns a dispatcher function which can be called to dispatch an
-action. By dispatching an action you call the corresponding function from
-the dispatcher and pass it the data. You can think of it as just calling a
-function.
-
-In order to access namespaced functions you can delimit your string with
-underscores. So to access `courses.get` you'd dispatch the string `courses_get`.
-
-Keep in mind that since you can only namespace 1 level deep, your dispatched
-actions should have no more than one underscore in them.
-````js
-// Call a non-namespaced action.
-dispatcher('group', [123, 'hello']);
-
-// Call a namespaced action.
-dispatcher('users_add', {foo: 'bar'});
-````
 
 ## License
 [MIT](https://tldrlegal.com/license/mit-license) © [Yoshua Wuyts](yoshuawuyts.com)

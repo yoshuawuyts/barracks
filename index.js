@@ -31,15 +31,69 @@ function Dispatcher(actions) {
 
   assert(actions, 'An \'actions\' object should be passed as an argument');
   assert('object' == typeof actions, 'Actions should be an object');
-
   _assertActionsObject(actions);
-  this._actions = actions;
 
-  return dispatch.bind(this);
+  this._isPending = {};
+  this._isHandled = {};
+  this._actions = actions;
+  this._isDispatching = false;
+  this._pendingPayload = null;
+
+  return this.dispatch.bind(this);
 };
 
 /**
- * Assert if the passed actions object is correct.
+ * Dispatch event to stores.
+ *
+ * @param {String} action
+ * @param {Object | Object[]} data
+ * @return {Function[]}
+ * @api public
+ */
+
+dispatcher.dispatch = function(action, payload) {
+
+  assert('string' == typeof action, 'Action should be a string');
+  assert(!this._isDispatching, 'Cannot dispatch in the middle of a dispatch');
+
+  var arr = action.split('_');
+
+  this._isDispatching = true;
+  this._payload = payload;
+  this._action = action;
+
+  try {
+    var fn = _handleDispatch.call(this, arr, 0);
+  } catch (e) {
+    this._pendingPayload = null;
+    this._isDispatching = false;
+    throw e;
+  }
+
+  fn.call(this, this._payload, this._cb, function() {
+    this._pendingPayload = null;
+    this._isDispatching = false;
+  });
+};
+
+/**
+ * Expose a delegation method to the registered actions.
+ *
+ * @param {String[]} ids
+ * @param {Function} done
+ * @api public
+ */
+
+dispatcher.waitFor = function(id, done) {
+  assert(this._isDispatching, '.waitFor() can only be invoked while dispatching');
+
+  if (this._isPending[id]) assert(this._isHandled[id]);
+  assert(this._actions[id]);
+
+};
+
+/**
+ * Deep assert if the passed actions object is correct.
  *
  * @param {Object} actions
  * @api private
@@ -54,31 +108,8 @@ function _assertActionsObject(actions) {
 }
 
 /**
- * Dispatch event to stores.
- *
- * @param {String} action
- * @param {Object | Object[]} data
- * @return {Function[]}
- * @api public
- */
-
-function dispatch(action, payload, cb) {
-
-  assert('string' == typeof action, 'Action should be a string');
-  assert(!cb || 'function' == typeof cb, 'Callback should be a function');
-
-  this._cb = cb || function() {};
-  this._payload = payload;
-  this._action = action;
-
-  var arr = action.split('_');
-
-  _handleDispatch.call(this, arr, 0);
-};
-
-/**
  * Handle the dispatched action. Traverses the call stack
- * recursively until a function is found calling it with
+ * recursively until a function is found, then calls it with
  * the given arguments.
  *
  * @param {String[]} arr
@@ -97,6 +128,7 @@ function _handleDispatch(arr, index) {
     fn = fn[arr[i]];
   }.bind(this));
 
-  debug('Dispatched action \'' + this._action + '\'.');
-  fn(this._payload, this._cb);
+  assert('function' == typeof fn, 'Action \'' + this._action + '\' is not registered');
+  debug('Dispatched action \'%s\'.', this._action);
+  return fn;
 }

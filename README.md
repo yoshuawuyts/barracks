@@ -71,14 +71,19 @@ Calling `users_initalize` below will delegate execution to `user_add` and
 ```js
 var dispatcher = barracks({
   users: {
-    initialize: function() {
-      this.waitFor('user_add');
-      this.waitFor('user_listen');
+    initialize: function(done) {
+      var arr = ['user_add', 'user_listen'];
+      this.waitFor(arr, function() {
+        console.log('initialized');
+      });
     },
-    add: function() {
-      // do async stuff
+    add: function(done) {
+      request('myapi.co/api/users', function(err, res) {
+        userStore.set(res);
+        done();
+      });
     },
-    listen: function() {
+    listen: function(done) {
       // start listening to socket server
     }
   }

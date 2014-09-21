@@ -11,7 +11,7 @@ var barracks = require('./index.js');
 
 describe('dispatcher = barracks()', function() {
 
-  it('should catch errors', function() {
+  it('should assert argument types', function() {
 
     barracks.bind(barracks)
       .should.throw('An \'actions\' object should be passed as an argument');
@@ -47,7 +47,7 @@ describe('dispatcher = barracks()', function() {
 
 describe('dispatcher()', function() {
 
-  it('should catch errors', function() {
+  it('should assert argument types', function() {
     var dispatcher = barracks({
       foo: {bar: {baz: function(){}}}
     });
@@ -57,6 +57,9 @@ describe('dispatcher()', function() {
 
     dispatcher.bind(dispatcher, 'something')
       .should.throw('Action \'something\' is not registered');
+
+    dispatcher.bind(dispatcher, 'foo_bar')
+      .should.throw('Action \'foo_bar\' is not registered');
 
     dispatcher.bind(dispatcher, 'foo_bar_baz_err')
       .should.throw('Action \'foo_bar_baz_err\' is not registered');
@@ -87,14 +90,30 @@ describe('dispatcher()', function() {
       },
       courses: {
         get: function() {},
-        put: function(value, cb) {cb(value)}
+        put: function(cb) {cb()}
       }
     });
 
-    dispatcher('courses_put', done, doneHandler);
+    dispatcher('courses_put', done);
+  });
 
-    function doneHandler(fn) {
-      fn();
-    }
+  it('should throw if called while in progress', function(done) {
+
+    var dispatcher = barracks({
+      users: {
+        add: function() {},
+        remove: function() {}
+      },
+      courses: {
+        get: function() {},
+        put: function(cb) {
+          dispatcher.bind(this, 'users_add')
+            .should.throw('Cannot dispatch in the middle of a dispatch');
+          cb();
+        }
+      }
+    });
+
+    dispatcher('courses_put', done)
   });
 });

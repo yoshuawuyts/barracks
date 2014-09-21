@@ -165,4 +165,24 @@ describe('dispatcher.waitFor()', function() {
       done();
     }
   });
+
+  it('should catch circular dependencies', function(done) {
+    var fn = function() {};
+
+    var dispatcher = barracks({
+      courses: {
+        foo: function(cb) {this.waitFor('courses_get', function() {
+          fn();
+        })},
+        get: function(cb) {fn = done, cb()},
+        put: function(cb) {
+          this.waitFor.bind(this, 'courses_put')
+            .should.throw('Circular dependency detected while waiting for \'courses_put\'');
+        }
+      }
+    });
+
+    dispatcher('courses_put');
+    dispatcher('courses_foo');
+  });
 });

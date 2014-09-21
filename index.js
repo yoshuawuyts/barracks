@@ -39,7 +39,6 @@ function Dispatcher(actions) {
   this._isHandled = {};
   this._actions = actions;
   this._isDispatching = false;
-  this._payload = null;
 
   return this.dispatch.bind(this);
 };
@@ -58,49 +57,64 @@ dispatcher.dispatch = function(action, payload) {
   assert('string' == typeof action, 'Action should be a string');
   assert(!this._isDispatching, 'Cannot dispatch in the middle of a dispatch');
 
-  var arr = action.split('_');
-
+  this._isHandled = {};
+  this._isPending = {};
+  this._isPending[action] = true;
   this._isDispatching = true;
-  this._payload = payload;
-  this._action = action;
 
   try {
-    var fn = _handleDispatch.call(this, arr);
+    var fn = _getAction.call(this, action);
   } catch (e) {
-    this._payload = null;
-    this._isDispatching = false;
+    _stopDispatching.call(this);
     throw e;
   }
 
-  debug('Dispatched action \'%s\'.', this._action);
-  fn.call(this, this._payload, this._cb, function() {
-    this._payload = null;
-    this._isDispatching = false;
-  });
+  debug('Dispatched action \'%s\'.', action);
+  fn.call(this, payload, _stopDispatching.bind(this));
 };
 
 /**
- * Expose a delegation method to the registered actions.
+ * Expose a delegation method to the registered actions. Calls `async.series()`
+ * under the hood. Sets a 'pending' state to
  *
  * @param {String[] |} ids
  * @param {Function} done
  * @api public
  */
 
-dispatcher.waitFor = function(ids, done) {
+dispatcher.waitFor = function(actions, done) {
   assert(!done || 'function' == typeof done, 'Callback should be a function');
 
-  if ('[object Array]' != toString.call(ids)) ids = [ids];
+  if ('[object Array]' != toString.call(actions)) actions = [actions];
 
-  var arr = ids.map(function(id) {
-    assert('string' == typeof id, '.waitFor(): requires a string or array of strings');
-    var actArr = id.split('_');
-    return _handleDispatch.call(this, actArr);
+  var arr = actions.map(function(action) {
+    assert('string' == typeof action, '.waitFor(): requires a string or array of strings');
+    try {
+      assert(!this._isPending[action], 'Circular dependency detected while waiting for \'' + action + '\'');
+    } catch(e) {
+      _stopDispatching.call(this);
+      throw e;
+    }
+
+    this._isPending[action] = true;
+    this._isHandled[action] = false;
+
+    return _getAction.call(this, action);
   }.bind(this));
 
-  debug('Waiting for actions', ids);
+  debug('Waiting for actions', actions);
   var nwArr = arr.concat(done);
-  async.series(nwArr);
+
+  // Call all functions in series and set their handled
+  // state to `true` when finished.
+
+  async.series(nwArr, cb);
+
+  function cb() {
+    actions.forEach(function(action) {
+      this._isHandled[action] = true;
+    }.bind(this));
+  }
 };
 
 /**
@@ -119,26 +133,41 @@ function _assertActionsObject(actions) {
 }
 
 /**
- * Handle the dispatched action. Traverses the call stack
+ * Get the dispatched action. Traverses the call stack
  * recursively until a function is found.
  *
  * @param {String[]} arr
+ * @param {String} action
  * @return {Function}
  * @api private
  */
 
-function _handleDispatch(arr, index) {
+function _getAction(action, arr, index) {
+  arr = arr || action.split('_');
   index == index || 0;
   var val = arr[index];
 
-  if ('object' == typeof val) return _handleDispatch.call(this, arr, index++);
+  if ('object' == typeof val) return _getAction.call(this, action, arr, index++);
 
   var fn = this._actions;
   arr.forEach(function(obj, i) {
-    assert(fn[arr[i]], 'Action \'' + this._action + '\' is not registered');
+    assert(fn[arr[i]], 'Action \'' + action + '\' is not registered');
     fn = fn[arr[i]];
   }.bind(this));
 
-  assert('function' == typeof fn, 'Action \'' + this._action + '\' is not registered');
+  assert('function' == typeof fn, 'Action \'' + action + '\' is not registered');
+  this._isPending[action] = true;
   return fn;
+}
+
+/**
+ * Clear bookkeeping.
+ *
+ * @api private
+ */
+
+function _stopDispatching() {
+  this._isDispatching = false;
+  this._isPending = {};
+  this._isHandled = {};
 }

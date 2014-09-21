@@ -4,6 +4,8 @@
 
 var debug = require('debug')('barracks');
 var assert = require('assert');
+var async = require('async');
+var toString = Object.prototype.toString;
 
 /**
  * Exports
@@ -37,7 +39,7 @@ function Dispatcher(actions) {
   this._isHandled = {};
   this._actions = actions;
   this._isDispatching = false;
-  this._pendingPayload = null;
+  this._payload = null;
 
   return this.dispatch.bind(this);
 };
@@ -63,15 +65,16 @@ dispatcher.dispatch = function(action, payload) {
   this._action = action;
 
   try {
-    var fn = _handleDispatch.call(this, arr, 0);
+    var fn = _handleDispatch.call(this, arr);
   } catch (e) {
-    this._pendingPayload = null;
+    this._payload = null;
     this._isDispatching = false;
     throw e;
   }
 
+  debug('Dispatched action \'%s\'.', this._action);
   fn.call(this, this._payload, this._cb, function() {
-    this._pendingPayload = null;
+    this._payload = null;
     this._isDispatching = false;
   });
 };
@@ -79,17 +82,25 @@ dispatcher.dispatch = function(action, payload) {
 /**
  * Expose a delegation method to the registered actions.
  *
- * @param {String[]} ids
+ * @param {String[] |} ids
  * @param {Function} done
  * @api public
  */
 
-dispatcher.waitFor = function(id, done) {
-  assert(this._isDispatching, '.waitFor() can only be invoked while dispatching');
+dispatcher.waitFor = function(ids, done) {
+  assert(!done || 'function' == typeof done, 'Callback should be a function');
 
-  if (this._isPending[id]) assert(this._isHandled[id]);
-  assert(this._actions[id]);
+  if ('[object Array]' != toString.call(ids)) ids = [ids];
 
+  var arr = ids.map(function(id) {
+    assert('string' == typeof id, '.waitFor(): requires a string or array of strings');
+    var actArr = id.split('_');
+    return _handleDispatch.call(this, actArr);
+  }.bind(this));
+
+  debug('Waiting for actions', ids);
+  var nwArr = arr.concat(done);
+  async.series(nwArr);
 };
 
 /**
@@ -109,17 +120,17 @@ function _assertActionsObject(actions) {
 
 /**
  * Handle the dispatched action. Traverses the call stack
- * recursively until a function is found, then calls it with
- * the given arguments.
+ * recursively until a function is found.
  *
  * @param {String[]} arr
- * @param {Number} index
+ * @return {Function}
  * @api private
  */
 
 function _handleDispatch(arr, index) {
-
+  index == index || 0;
   var val = arr[index];
+
   if ('object' == typeof val) return _handleDispatch.call(this, arr, index++);
 
   var fn = this._actions;
@@ -129,6 +140,5 @@ function _handleDispatch(arr, index) {
   }.bind(this));
 
   assert('function' == typeof fn, 'Action \'' + this._action + '\' is not registered');
-  debug('Dispatched action \'%s\'.', this._action);
   return fn;
 }

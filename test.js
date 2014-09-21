@@ -114,6 +114,55 @@ describe('dispatcher()', function() {
       }
     });
 
-    dispatcher('courses_put', done)
+    dispatcher('courses_put', done);
+  });
+});
+
+describe('dispatcher.waitFor()', function() {
+  it('should assert argument types', function(done) {
+
+    var dispatcher = barracks({
+      courses: {
+        get: function() {},
+        put: function(cb) {
+          dispatcher.bind(this, 'courses_get')
+            .should.throw('Cannot dispatch in the middle of a dispatch');
+          cb();
+        }
+      }
+    });
+
+    dispatcher('courses_put', done);
+  });
+
+  it('should wait for subcalls to finish', function(done) {
+
+    var val = 0;
+    var dispatcher = barracks({
+      users: {
+        init: function(fn) {
+          this.waitFor(['users_foo', 'users_bar'], end);
+        },
+        foo: function(fin) {
+          setTimeout(function() {
+            val++;
+            fin();
+          }, 15);
+        },
+        bar: function(fin) {
+          setTimeout(function() {
+            val++;
+            fin();
+          }, 10);
+        }
+      }
+    });
+
+    dispatcher('users_init', done);
+
+    function end() {
+      val.should.eql(2);
+      done();
+    }
   });
 });

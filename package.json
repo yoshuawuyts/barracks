@@ -6,7 +6,7 @@
   "scripts": {
     "test": "make test"
   },
-  "repository": "yoshuawuyts/fax",
+  "repository": "yoshuawuyts/barracks",
   "keywords": [
     "react-component",
     "dispatcher",

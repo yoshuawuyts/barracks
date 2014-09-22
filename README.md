@@ -4,8 +4,8 @@
 [![Test coverage][coveralls-image]][coveralls-url]
 
 Event dispatcher for the [flux architecture][flux]. Provides event composition
-through `this.waitFor()`, checks for recursive calls while maintaining
-a simple interface (3 functions).
+through `this.waitFor()` and checks for circular dependencies with a small
+interface of only 3 functions.
 
 ## Installation
 ```bash
@@ -90,7 +90,7 @@ dispatcher('group', [123, 'hello']);
 dispatcher('users_add', {foo: 'bar'});
 ````
 
-#### dispatcher.waitFor(action)
+#### ctx.waitFor(action)
 Execute another function within the dispatcher before proceeding. Registered
 callbacks are always bound to the scope of the dispatcher, so you can just
 call `this.waitFor` to access the function from within a registered callback.
@@ -107,6 +107,7 @@ var dispatcher = barracks({
       var arr = ['user_add', 'user_listen'];
       this.waitFor(arr, function() {
         console.log('initialized');
+        done();
       });
     },
     add: function(done) {
@@ -122,6 +123,46 @@ var dispatcher = barracks({
     }
   }
 });
+```
+
+#### ctx.locals=
+`this.locals` is shared between all (delegated) function calls and acts as the
+location to share data between function calls. For example when you retrieve
+a token from a store and want to make it available to all subsequent functions.
+
+The payload provided by `dispatcher()` is available under `this.locals.payload`.
+```js
+var request = require('request');
+
+var dispatcher = barracks({
+  users: {
+    add: add,
+    listen: listen
+  }
+});
+
+function add(done) {
+  request('myapi.co/api/auth', function(err, res) {
+    this.locals.token = res.token;
+    done();
+  });
+}
+
+function listen(done) {
+  this.waitFor(['user_add'], handleWaitfor);
+
+  function handleWaitfor() {
+    var url = 'myapi.co/me?token=' + this.locals.token;
+    request(url, handleRequest);
+  }
+
+  function handleRequest(err, res) {
+    console.log(res);
+    done();
+  }
+}
+
+dispatcher('user_listen');
 ```
 
 ## License

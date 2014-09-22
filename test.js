@@ -183,3 +183,24 @@ describe('dispatcher.waitFor()', function() {
     dispatcher('courses_foo');
   });
 });
+
+describe('ctx.locals', function() {
+  it('should exist in a shared context', function(done) {
+    var dispatcher = barracks({
+      courses: {
+        get: function(val, next) {
+          this.locals.done = this.locals.payload;
+          next();
+        },
+        put: function(val, next) {
+          this.locals.payload.should.be.of.type('function');
+          this.waitFor('courses_get', function() {
+            this.locals.done();
+          });
+        }
+      }
+    });
+
+    dispatcher('courses_put', done);
+  });
+})

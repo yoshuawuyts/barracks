@@ -1,3 +1,6 @@
+# 4.1.0 / 2014-09-22
+- add ctx.locals
+
 # 4.0.0 / 2014-09-22
 - add dispatcher.waitFor()
 - add circular checks

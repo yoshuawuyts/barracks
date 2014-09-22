@@ -105,7 +105,10 @@ dispatcher.waitFor = function(actions, done) {
     return nwAction.bind(this, this.locals.payload);
   }.bind(this));
 
-  debug('Waiting for actions', actions);
+  debug('Waiting for actions ' + actions.map(function(action, i) {
+    if (i == actions.length - 1) return action;
+    return action + ', ';
+  }));
   var nwArr = arr.concat(done.bind(this));
 
   // Call all functions in series and set their handled

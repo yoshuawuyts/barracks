@@ -57,6 +57,7 @@ dispatcher.dispatch = function(action, payload) {
   assert('string' == typeof action, 'Action should be a string');
   assert(!this._isDispatching, 'Cannot dispatch in the middle of a dispatch');
 
+  this._payload = payload;
   this._isHandled = {};
   this._isPending = {};
   this._isPending[action] = true;
@@ -70,7 +71,7 @@ dispatcher.dispatch = function(action, payload) {
   }
 
   debug('Dispatched action \'%s\'.', action);
-  fn.call(this, payload, _stopDispatching.bind(this));
+  fn.call(this, this._payload, _stopDispatching.bind(this));
 };
 
 /**
@@ -99,7 +100,8 @@ dispatcher.waitFor = function(actions, done) {
     this._isPending[action] = true;
     this._isHandled[action] = false;
 
-    return _getAction.call(this, action);
+    var nwAction = _getAction.call(this, action);
+    return nwAction.bind(this, this._payload)
   }.bind(this));
 
   debug('Waiting for actions', actions);
@@ -168,6 +170,7 @@ function _getAction(action, arr, index) {
 
 function _stopDispatching() {
   this._isDispatching = false;
+  this._payload = null;
   this._isPending = {};
   this._isHandled = {};
 }

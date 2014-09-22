@@ -136,33 +136,31 @@ describe('dispatcher.waitFor()', function() {
 
   it('should wait for subcalls to finish', function(done) {
 
-    var val = 0;
+    var count = 0;
     var dispatcher = barracks({
       users: {
-        init: function(fn) {
-          this.waitFor(['users_foo', 'users_bar'], end);
+        init: function(val, fin) {
+          this.waitFor(['users_foo', 'users_bar'], function() {
+            count.should.eql(2);
+            val();
+          });
         },
-        foo: function(fin) {
+        foo: function(val, fin) {
           setTimeout(function() {
-            val++;
-            fin();
-          }, 15);
-        },
-        bar: function(fin) {
-          setTimeout(function() {
-            val++;
+            count++;
             fin();
           }, 10);
+        },
+        bar: function(val, fin) {
+          setTimeout(function() {
+            count++;
+            fin();
+          }, 5);
         }
       }
     });
 
     dispatcher('users_init', done);
-
-    function end() {
-      val.should.eql(2);
-      done();
-    }
   });
 
   it('should catch circular dependencies', function(done) {
@@ -170,11 +168,11 @@ describe('dispatcher.waitFor()', function() {
 
     var dispatcher = barracks({
       courses: {
-        foo: function(cb) {this.waitFor('courses_get', function() {
+        foo: function(val, cb) {this.waitFor('courses_get', function() {
           fn();
         })},
-        get: function(cb) {fn = done, cb()},
-        put: function(cb) {
+        get: function(val, cb) {fn = done, cb()},
+        put: function(val, cb) {
           this.waitFor.bind(this, 'courses_put')
             .should.throw('Circular dependency detected while waiting for \'courses_put\'');
         }

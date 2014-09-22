@@ -114,7 +114,7 @@ dispatcher.waitFor = function(actions, done) {
   // Call all functions in series and set their handled
   // state to `true` when finished.
 
-  async.series(nwArr, cb);
+  async.series(nwArr, cb.bind(this));
 
   function cb() {
     actions.forEach(function(action) {

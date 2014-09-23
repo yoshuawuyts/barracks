@@ -71,7 +71,7 @@ dispatcher.dispatch = function(action, payload) {
     throw e;
   }
 
-  debug('Dispatched \'%s\'.', action);
+  debug('Dispatched \'%s\'', action);
   fn.call(this, this.locals.payload, _stopDispatching.bind(this));
 };
 
@@ -105,9 +105,10 @@ dispatcher.waitFor = function(actions, done) {
     return nwAction.bind(this, this.locals.payload);
   }.bind(this));
 
-  debug('Waiting for%s', actions.map(function(action) {
-    return ' \'' + action + '\'';
-  }));
+  debug('Waiting for ' + actions.reduce(function(prev, action, i, arr) {
+    if (i == actions.length - 1) return prev + '\'' + action + '\'';
+    return prev + '\'' + action + '\', ';
+  }, ''));
   var nwArr = arr.concat(done.bind(this));
 
   // Call all functions in series and set their handled

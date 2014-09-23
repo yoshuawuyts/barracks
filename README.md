@@ -149,12 +149,10 @@ function add(done) {
 }
 
 function listen(done) {
-  this.waitFor(['user_add'], handleWaitfor);
-
-  function handleWaitfor() {
+  this.waitFor(['user_add'], function() {
     var url = 'myapi.co/me?token=' + this.locals.token;
     request(url, handleRequest);
-  }
+  });
 
   function handleRequest(err, res) {
     console.log(res);

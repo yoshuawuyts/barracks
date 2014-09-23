@@ -57,10 +57,14 @@ dispatcher.dispatch = function(action, payload) {
   assert('string' == typeof action, 'Action should be a string');
   assert(!this._isDispatching, 'Cannot dispatch in the middle of a dispatch');
 
-  this._isPending[action] = true;
   this._isDispatching = true;
-  this._isHandled = {};
+
   this._isPending = {};
+  this._isPending[action] = true;
+
+  this._isHandled = {};
+  this._isHandled[action] = false;
+
   this.locals = {};
   this.locals.payload = payload;
 
@@ -85,42 +89,21 @@ dispatcher.dispatch = function(action, payload) {
  */
 
 dispatcher.waitFor = function(actions, done) {
-  assert(!done || 'function' == typeof done, 'Callback should be a function');
+  done = done || function() {};
+  assert('function' == typeof done, 'Callback should be a function');
 
   if ('[object Array]' != toString.call(actions)) actions = [actions];
 
   var arr = actions.map(function(action) {
-    assert('string' == typeof action, '.waitFor(): requires a string or array of strings');
-    try {
-      assert(!this._isPending[action], 'Circular dependency detected while waiting for \'' + action + '\'');
-    } catch(e) {
-      _stopDispatching.call(this);
-      throw e;
-    }
 
-    this._isPending[action] = true;
-    this._isHandled[action] = false;
+    var fn = _getAction.call(this, action);
+    var nwFn = _thunkify.call(this, fn, action);
+    return nwFn.bind(this);
 
-    var nwAction = _getAction.call(this, action);
-    return nwAction.bind(this, this.locals.payload);
   }.bind(this));
 
-  debug('Waiting for ' + actions.reduce(function(prev, action, i, arr) {
-    if (i == actions.length - 1) return prev + '\'' + action + '\'';
-    return prev + '\'' + action + '\', ';
-  }, ''));
   var nwArr = arr.concat(done.bind(this));
-
-  // Call all functions in series and set their handled
-  // state to `true` when finished.
-
-  async.series(nwArr, cb.bind(this));
-
-  function cb() {
-    actions.forEach(function(action) {
-      this._isHandled[action] = true;
-    }.bind(this));
-  }
+  async.series(nwArr);
 };
 
 /**
@@ -136,6 +119,43 @@ function _assertActionsObject(actions) {
     if ('object' == typeof action) return _assertActionsObject(action);
     assert('function' == typeof action, 'Action should be a function');
   });
+}
+
+/**
+ * Thunkify a function to properly set
+ * `this._isHandled[action] = true` when
+ * done executing.
+ *
+ * @param {Function} fn
+ * @param {Function} isHandled
+ * @return {Function}
+ */
+
+function _thunkify(fn, action) {
+
+  return function(done) {
+    try {
+      assert('string' == typeof action, '.waitFor(): requires a string or array of strings');
+      if (this._isPending[action]) {
+        assert(this._isHandled[action], 'Circular dependency detected while waiting for \'' + action + '\'');
+      }
+    } catch(e) {
+      _stopDispatching.call(this);
+      throw e;
+    }
+
+    this._isPending[action] = true;
+    this._isHandled[action] = false;
+
+    function fin() {
+      this._isHandled[action] = true;
+      done();
+    }
+
+    debug('Waiting for \'' + action + '\'');
+    fn(this.locals.payload, fin.bind(this));
+
+  }
 }
 
 /**
@@ -162,8 +182,7 @@ function _getAction(action, arr, index) {
   }.bind(this));
 
   assert('function' == typeof fn, 'Action \'' + action + '\' is not registered');
-  this._isPending[action] = true;
-  return fn;
+  return fn.bind(this);
 }
 
 /**

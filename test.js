@@ -164,23 +164,50 @@ describe('dispatcher.waitFor()', function() {
   });
 
   it('should catch circular dependencies', function(done) {
-    var fn = function() {};
-
     var dispatcher = barracks({
       courses: {
-        foo: function(val, cb) {this.waitFor('courses_get', function() {
-          fn();
-        })},
-        get: function(val, cb) {fn = done, cb()},
+        foo: function(val, cb) {
+          this.waitFor('courses_get', function() {
+            this.locals.fn();
+          });
+        },
+        get: function(val, cb) {
+          this.locals.fn = done, cb()
+        },
         put: function(val, cb) {
+
           this.waitFor.bind(this, 'courses_put')
             .should.throw('Circular dependency detected while waiting for \'courses_put\'');
+          cb();
         }
       }
     });
 
     dispatcher('courses_put');
     dispatcher('courses_foo');
+  });
+
+  it('should not throw if a fn has already been called', function(done) {
+    var dispatcher = barracks({
+      courses: {
+        get: function(val, cb) {
+          cb();
+        },
+        foo: function(val, cb) {
+          this.waitFor('courses_get', function() {
+            cb();
+          });
+        },
+        bar: function(val, cb) {
+          this.waitFor(['courses_get', 'courses_get', 'courses_foo'], function() {
+            done();
+            cb();
+          });
+        }
+      }
+    });
+
+    dispatcher('courses_bar');
   });
 });
 

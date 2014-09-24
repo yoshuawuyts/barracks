@@ -7,6 +7,19 @@ Event dispatcher for the [flux architecture][flux]. Provides event composition
 through `this.waitFor()` and checks for circular dependencies with a small
 interface of only 3 functions.
 
+```
+╔═════╗        ╔════════════╗       ╔════════╗       ╔═════════════════╗
+║ API ║<──────>║ Middleware ║──────>║ Stores ║──────>║ View Components ║
+╚═════╝        ╚════════════╝       ╚════════╝       ╚═════════════════╝
+                     ^                                        │
+                     │                                        │
+               ╔════════════╗                                 │
+               ║ Dispatcher ║                                 │
+               ╚════════════╝                                 │
+                     ^                                        │
+                     └────────────────────────────────────────┘
+```
+
 ## Installation
 ```bash
 $ npm i --save barracks

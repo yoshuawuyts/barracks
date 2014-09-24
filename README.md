@@ -1,4 +1,4 @@
-# Barracks
+# barracks
 [![NPM version][npm-image]][npm-url]
 [![build status][travis-image]][travis-url]
 [![Test coverage][coveralls-image]][coveralls-url]
@@ -27,22 +27,16 @@ $ npm i --save barracks
 
 ## Overview
 ````js
-/**
- * Initialize a dispatcher.
- */
-
 var barracks = require('barracks');
+
+// Initialize dispatcher.
+
 var dispatcher = barracks({
   users: {
-    add: function(user, done) {
+    add: function(val, done) {
       console.log(user + ' got added');
       done();
-    },
-    remove: function(user, done) {
-      console.log(user + ' was removed');
-      done();
     }
-  },
   courses: {
     get: function(val, done) {
       console.log('Get ' + val);
@@ -55,9 +49,7 @@ var dispatcher = barracks({
   }
 });
 
-/**
- * Dispatch an event.
- */
+// Dispatch an event.
 
 dispatcher('users_add', 'Loki');
 // => 'Loki got added'
@@ -69,12 +61,14 @@ Initialize a new `barracks` instance. The `actions` object should contain
 functions, namespaced at most one level deep. Returns a function.
 ```js
 // Initialize without namespaces.
+
 var dispatcher = barracks({
   user: function() {},
   group: function() {}
 });
 
 // Initialize with namespaces.
+
 var dispatcher = barracks({
   users: {
     add: function() {},
@@ -111,8 +105,11 @@ call `this.waitFor` to access the function from within a registered callback.
 In the example below `users_initalize` will delegate execution to `user_add` and
 `user_listen` before proceeding to execute its own code.
 ```js
+var userStore = require('simple-store')('user');
 var socket = require('sockjs-client');
 var request = require('request');
+
+// Initialize dispatcher.
 
 var dispatcher = barracks({
   users: {
@@ -136,6 +133,10 @@ var dispatcher = barracks({
     }
   }
 });
+
+// Initialize the users store.
+
+dispatcher('users_initialize');
 ```
 
 #### ctx.locals=
@@ -147,33 +148,33 @@ The payload provided by `dispatcher()` is available under `this.locals.payload`.
 ```js
 var request = require('request');
 
+// Initialize dispatcher.
+
 var dispatcher = barracks({
   users: {
-    add: add,
-    listen: listen
+    add: function(done) {
+      request('myapi.co/api/auth', function(err, res) {
+        this.locals.token = res.token;
+        done();
+      });
+    },
+    fetch: function(done) {
+      this.waitFor(['user_add'], function() {
+        var url = 'myapi.co/me?token=' + this.locals.token;
+        request(url, handleRequest);
+      });
+
+      function handleRequest(err, res) {
+        console.log(res);
+        done();
+      }
+    }
   }
 });
 
-function add(done) {
-  request('myapi.co/api/auth', function(err, res) {
-    this.locals.token = res.token;
-    done();
-  });
-}
+// Get user data from server.
 
-function listen(done) {
-  this.waitFor(['user_add'], function() {
-    var url = 'myapi.co/me?token=' + this.locals.token;
-    request(url, handleRequest);
-  });
-
-  function handleRequest(err, res) {
-    console.log(res);
-    done();
-  }
-}
-
-dispatcher('user_listen');
+dispatcher('user_fetch');
 ```
 
 ## License

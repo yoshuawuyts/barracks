@@ -5,7 +5,6 @@
 var debug = require('debug')('barracks');
 var assert = require('assert');
 var async = require('async');
-var toString = Object.prototype.toString;
 
 /**
  * Exports
@@ -92,7 +91,7 @@ dispatcher.waitFor = function(actions, done) {
   done = done || function() {};
   assert('function' == typeof done, 'Callback should be a function');
 
-  if ('[object Array]' != toString.call(actions)) actions = [actions];
+  actions = Array.isArray(actions) ? actions : [actions];
 
   var arr = actions.map(function(action) {
 
@@ -170,7 +169,7 @@ function _thunkify(fn, action) {
 
 function _getAction(action, arr, index) {
   arr = arr || action.split('_');
-  index == index || 0;
+  index = index || 0;
   var val = arr[index];
 
   if ('object' == typeof val) return _getAction.call(this, action, arr, index++);

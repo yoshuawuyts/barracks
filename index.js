@@ -74,7 +74,7 @@ dispatcher.dispatch = function(action, payload) {
     throw e;
   }
 
-  debug('Dispatched \'%s\'', action);
+  debug('dispatch \'%s\'', action);
   fn.call(this, this.locals.payload, _stopDispatching.bind(this));
 };
 
@@ -151,7 +151,7 @@ function _thunkify(fn, action) {
       done();
     }
 
-    debug('Waiting for \'' + action + '\'');
+    debug('wait for \'' + action + '\'');
     fn(this.locals.payload, fin.bind(this));
 
   }

@@ -84,7 +84,7 @@ var dispatcher = barracks({
 #### dispatcher(action, data)
 `barracks()` returns a dispatcher function which can be called to dispatch an
 action. By dispatching an action you call the corresponding function from
-the dispatcher and pass it the data. You can think of it as just calling a
+the dispatcher and pass it data. You can think of it as just calling a
 function.
 
 In order to access namespaced functions you can delimit your string with

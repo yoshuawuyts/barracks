@@ -53,8 +53,8 @@ function Dispatcher(actions) {
 
 dispatcher.dispatch = function(action, payload) {
 
-  assert('string' == typeof action, 'Action should be a string');
-  assert(!this._isDispatching, 'Cannot dispatch in the middle of a dispatch');
+  assert('string' == typeof action, 'Action \'' + action + '\' should be a string');
+  assert(!this._isDispatching, 'Cannot dispatch \'' + action + '\' in the middle of a dispatch');
 
   this._isDispatching = true;
 

@@ -9,23 +9,18 @@ var barracks = require('./index.js');
  */
 
 describe('dispatcher = barracks()', function() {
-
   it('should assert argument types', function() {
-
     barracks.bind(barracks)
-      .should.throw('An \'actions\' object should be passed as an argument');
+      .should.throw('an \'actions\' object should be passed as an argument');
 
-    var arg = 123;
-    barracks.bind(barracks, arg)
-      .should.throw('Actions should be an object');
+    barracks.bind(barracks, 123)
+      .should.throw('actions should be an object');
 
-    arg = {users: 123};
-    barracks.bind(barracks, arg)
-      .should.throw('Action should be a function');
+    barracks.bind(barracks, {users: 123})
+      .should.throw('action should be a function');
 
-    arg = {users: {add: 123}}
-    barracks.bind(barracks, arg)
-      .should.throw('Action should be a function');
+    barracks.bind(barracks, {users: {add: 123}})
+      .should.throw('action should be a function');
   });
 
   it('should return a function', function() {
@@ -52,16 +47,16 @@ describe('dispatcher()', function() {
     });
 
     dispatcher.bind(dispatcher, {})
-      .should.throw('Action should be a string');
+      .should.throw('action \'[object Object]\' should be a string');
 
     dispatcher.bind(dispatcher, 'something')
-      .should.throw('Action \'something\' is not registered');
+      .should.throw('action \'something\' is not registered');
 
     dispatcher.bind(dispatcher, 'foo_bar')
-      .should.throw('Action \'foo_bar\' is not registered');
+      .should.throw('action \'foo_bar\' is not registered');
 
     dispatcher.bind(dispatcher, 'foo_bar_baz_err')
-      .should.throw('Action \'foo_bar_baz_err\' is not registered');
+      .should.throw('action \'foo_bar_baz_err\' is not registered');
   });
 
   it('should call actions', function(done) {
@@ -107,7 +102,7 @@ describe('dispatcher()', function() {
         get: function() {},
         put: function(cb) {
           dispatcher.bind(this, 'users_add')
-            .should.throw('Cannot dispatch in the middle of a dispatch');
+            .should.throw('cannot dispatch \'users_add\' in the middle of a dispatch');
           cb();
         }
       }
@@ -125,7 +120,7 @@ describe('dispatcher.waitFor()', function() {
         get: function() {},
         put: function(cb) {
           dispatcher.bind(this, 'courses_get')
-            .should.throw('Cannot dispatch in the middle of a dispatch');
+            .should.throw('cannot dispatch \'courses_get\' in the middle of a dispatch');
           cb();
         }
       }
@@ -177,7 +172,7 @@ describe('dispatcher.waitFor()', function() {
         put: function(val, cb) {
 
           this.waitFor.bind(this, 'courses_put')
-            .should.throw('Circular dependency detected while waiting for \'courses_put\'');
+            .should.throw('circular dependency detected while waiting for \'courses_put\'');
           cb();
         }
       }

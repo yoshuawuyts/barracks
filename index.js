@@ -3,7 +3,7 @@
  */
 
 var debug = require('debug')('barracks');
-var assert = require('assert');
+var assert = require('assertf');
 var async = require('async');
 
 /**
@@ -30,8 +30,8 @@ function Dispatcher(actions) {
 
   if (!(this instanceof Dispatcher)) return new Dispatcher(actions);
 
-  assert(actions, 'An \'actions\' object should be passed as an argument');
-  assert('object' == typeof actions, 'Actions should be an object');
+  assert(actions, 'an \'actions\' object should be passed as an argument');
+  assert.equal(typeof actions, 'object', 'actions should be an object');
   _assertActionsObject(actions);
 
   this._isPending = {};
@@ -53,8 +53,8 @@ function Dispatcher(actions) {
 
 dispatcher.dispatch = function(action, payload) {
 
-  assert('string' == typeof action, 'Action \'' + action + '\' should be a string');
-  assert(!this._isDispatching, 'Cannot dispatch \'' + action + '\' in the middle of a dispatch');
+  assert.equal(typeof action, 'string', 'action \'%s\' should be a string', action);
+  assert(!this._isDispatching, 'cannot dispatch \'%s\' in the middle of a dispatch', action);
 
   this._isDispatching = true;
 
@@ -89,7 +89,7 @@ dispatcher.dispatch = function(action, payload) {
 
 dispatcher.waitFor = function(actions, done) {
   done = done || function() {};
-  assert('function' == typeof done, 'Callback should be a function');
+  assert.equal(typeof done, 'function', 'callback should be a function');
 
   actions = Array.isArray(actions) ? actions : [actions];
 
@@ -116,7 +116,7 @@ function _assertActionsObject(actions) {
   Object.keys(actions).forEach(function(key) {
     var action = actions[key];
     if ('object' == typeof action) return _assertActionsObject(action);
-    assert('function' == typeof action, 'Action should be a function');
+    assert.equal(typeof action, 'function', 'action should be a function');
   });
 }
 
@@ -134,9 +134,9 @@ function _thunkify(fn, action) {
 
   return function(done) {
     try {
-      assert('string' == typeof action, '.waitFor(): requires a string or array of strings');
+      assert.equal(typeof action, 'string', '.waitFor(): requires a string or array of strings');
       if (this._isPending[action]) {
-        assert(this._isHandled[action], 'Circular dependency detected while waiting for \'' + action + '\'');
+        assert(this._isHandled[action], 'circular dependency detected while waiting for \'%s\'', action);
       }
     } catch(e) {
       _stopDispatching.call(this);
@@ -151,7 +151,7 @@ function _thunkify(fn, action) {
       done();
     }
 
-    debug('wait for \'' + action + '\'');
+    debug('wait for \'%s\'', action);
     fn(this.locals.payload, fin.bind(this));
 
   }
@@ -176,11 +176,11 @@ function _getAction(action, arr, index) {
 
   var fn = this._actions;
   arr.forEach(function(obj, i) {
-    assert(fn[arr[i]], 'Action \'' + action + '\' is not registered');
+    assert(fn[arr[i]], 'action \'%s\' is not registered', action);
     fn = fn[arr[i]];
   }.bind(this));
 
-  assert('function' == typeof fn, 'Action \'' + action + '\' is not registered');
+  assert.equal(typeof fn, 'function', 'action \'%s\' is not registered', action);
   return fn.bind(this);
 }
 

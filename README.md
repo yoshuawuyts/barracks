@@ -33,18 +33,18 @@ var barracks = require('barracks');
 
 var dispatcher = barracks({
   users: {
-    add: function(val, done) {
+    add: function(next) {
       console.log(user + ' got added');
-      done();
+      next();
     }
   courses: {
-    get: function(val, done) {
-      console.log('Get ' + val);
-      done();
+    get: function(next) {
+      console.log('Get ' + this.payload);
+      next();
     },
-    set: function(val, done) {
-      console.log('Set ' + val);
-      done();
+    set: function(next) {
+      console.log('Set ' + this.payload);
+      next();
     }
   }
 });
@@ -113,23 +113,23 @@ var request = require('request');
 
 var dispatcher = barracks({
   users: {
-    initialize: function(done) {
+    initialize: function(next) {
       var arr = ['user_add', 'user_listen'];
       this.waitFor(arr, function() {
         console.log('initialized');
-        done();
+        next();
       });
     },
-    add: function(done) {
+    add: function(next) {
       request('myapi.co/api/users', function(err, res) {
         userStore.set(res);
-        done();
+        next();
       });
     },
-    listen: function(done) {
+    listen: function(next) {
       var sock = new socket('myapi.co/api/socket');
       sock.onMessage(console.log);
-      done();
+      next();
     }
   }
 });
@@ -137,6 +137,23 @@ var dispatcher = barracks({
 // Initialize the users store.
 
 dispatcher('users_initialize');
+```
+
+#### ctx.payload
+`ctx.payload` contains the data provided by `dispatcher()`.
+```js
+var dispatcher = barracks({
+  users: {
+    init: function(next) {
+      console.log(this.payload);
+    }
+  }
+});
+
+// Initialize the users store.
+
+dispatcher('users_init', 'fooBar');
+// -> console.log: 'fooBar'
 ```
 
 #### ctx.locals=
@@ -152,13 +169,13 @@ var request = require('request');
 
 var dispatcher = barracks({
   users: {
-    add: function(done) {
+    add: function(next) {
       request('myapi.co/api/auth', function(err, res) {
         this.locals.token = res.token;
-        done();
+        next();
       });
     },
-    fetch: function(done) {
+    fetch: function(next) {
       this.waitFor(['user_add'], function() {
         var url = 'myapi.co/me?token=' + this.locals.token;
         request(url, handleRequest);
@@ -166,7 +183,7 @@ var dispatcher = barracks({
 
       function handleRequest(err, res) {
         console.log(res);
-        done();
+        next();
       }
     }
   }

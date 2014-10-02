@@ -68,7 +68,7 @@ describe('dispatcher()', function() {
       },
       courses: {
         get: function() {},
-        put: function(fn) {fn()}
+        put: function() {this.payload()}
       }
     });
 
@@ -84,7 +84,7 @@ describe('dispatcher()', function() {
       },
       courses: {
         get: function() {},
-        put: function(cb) {cb()}
+        put: function() {this.payload()}
       }
     });
 
@@ -100,10 +100,10 @@ describe('dispatcher()', function() {
       },
       courses: {
         get: function() {},
-        put: function(cb) {
+        put: function() {
           dispatcher.bind(this, 'users_add')
             .should.throw('cannot dispatch \'users_add\' in the middle of a dispatch');
-          cb();
+          this.payload();
         }
       }
     });
@@ -118,10 +118,10 @@ describe('dispatcher.waitFor()', function() {
     var dispatcher = barracks({
       courses: {
         get: function() {},
-        put: function(cb) {
+        put: function() {
           dispatcher.bind(this, 'courses_get')
             .should.throw('cannot dispatch \'courses_get\' in the middle of a dispatch');
-          cb();
+          this.payload();
         }
       }
     });
@@ -129,27 +129,27 @@ describe('dispatcher.waitFor()', function() {
     dispatcher('courses_put', done);
   });
 
-  it('should wait for subcalls to finish', function(done) {
+  it('should wait for subcalls to nextish', function(done) {
 
     var count = 0;
     var dispatcher = barracks({
       users: {
-        init: function(val, fin) {
+        init: function(next) {
           this.waitFor(['users_foo', 'users_bar'], function() {
             count.should.eql(2);
-            val();
+            this.payload();
           });
         },
-        foo: function(val, fin) {
+        foo: function(next) {
           setTimeout(function() {
             count++;
-            fin();
+            next();
           }, 10);
         },
-        bar: function(val, fin) {
+        bar: function(next) {
           setTimeout(function() {
             count++;
-            fin();
+            next();
           }, 5);
         }
       }
@@ -161,19 +161,20 @@ describe('dispatcher.waitFor()', function() {
   it('should catch circular dependencies', function(done) {
     var dispatcher = barracks({
       courses: {
-        foo: function(val, cb) {
+        foo: function(next) {
           this.waitFor('courses_get', function() {
             this.locals.fn();
           });
         },
-        get: function(val, cb) {
-          this.locals.fn = done, cb()
+        get: function(next) {
+          this.locals.fn = done;
+          next();
         },
-        put: function(val, cb) {
+        put: function(next) {
 
           this.waitFor.bind(this, 'courses_put')
             .should.throw('circular dependency detected while waiting for \'courses_put\'');
-          cb();
+          next();
         }
       }
     });
@@ -185,18 +186,18 @@ describe('dispatcher.waitFor()', function() {
   it('should not throw if a fn has already been called', function(done) {
     var dispatcher = barracks({
       courses: {
-        get: function(val, cb) {
-          cb();
+        get: function(next) {
+          next();
         },
-        foo: function(val, cb) {
+        foo: function(next) {
           this.waitFor('courses_get', function() {
-            cb();
+            next();
           });
         },
-        bar: function(val, cb) {
+        bar: function(next) {
           this.waitFor(['courses_get', 'courses_get', 'courses_foo'], function() {
             done();
-            cb();
+            next();
           });
         }
       }
@@ -210,12 +211,12 @@ describe('ctx.locals', function() {
   it('should exist in a shared context', function(done) {
     var dispatcher = barracks({
       courses: {
-        get: function(val, next) {
-          this.locals.done = this.locals.payload;
+        get: function(next) {
+          this.locals.done = this.payload;
           next();
         },
-        put: function(val, next) {
-          this.locals.payload.should.be.of.type('function');
+        put: function(next) {
+          this.payload.should.be.of.type('function');
           this.waitFor('courses_get', function() {
             this.locals.done();
           });

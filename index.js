@@ -34,6 +34,9 @@ function Dispatcher(actions) {
   assert.equal(typeof actions, 'object', 'actions should be an object');
   _assertActionsObject(actions);
 
+  this.locals = {};
+  this.payload = null;
+
   this._current = [];
   this._isPending = {};
   this._isHandled = {};
@@ -67,7 +70,7 @@ dispatcher.dispatch = function(action, payload) {
   this._isHandled[action] = false;
 
   this.locals = {};
-  this.locals.payload = payload;
+  this.payload = payload;
 
   try {
     var fn = _getAction.call(this, action);
@@ -77,7 +80,7 @@ dispatcher.dispatch = function(action, payload) {
   }
 
   debug('dispatch \'%s\'', action);
-  fn.call(this, this.locals.payload, _stopDispatching.bind(this));
+  fn.call(this, _stopDispatching.bind(this));
 };
 
 /**
@@ -156,8 +159,7 @@ function _thunkify(fn, action) {
 
     this._current.push(action);
     debug('\'%s\' -> \'%s\'', this._current[this._current.length - 2], action);
-    fn(this.locals.payload, fin.bind(this));
-
+    fn(fin.bind(this));
   }
 }
 
@@ -198,6 +200,7 @@ function _stopDispatching() {
   this._isDispatching = false;
   this._isPending = {};
   this._isHandled = {};
-  this.locals = null;
+  this.payload = null;
   this._current = [];
+  this.locals = {};
 }

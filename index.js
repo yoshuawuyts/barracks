@@ -34,6 +34,7 @@ function Dispatcher(actions) {
   assert.equal(typeof actions, 'object', 'actions should be an object');
   _assertActionsObject(actions);
 
+  this._current = [];
   this._isPending = {};
   this._isHandled = {};
   this._actions = actions;
@@ -56,6 +57,7 @@ dispatcher.dispatch = function(action, payload) {
   assert.equal(typeof action, 'string', 'action \'%s\' should be a string', action);
   assert(!this._isDispatching, 'cannot dispatch \'%s\' in the middle of a dispatch', action);
 
+  this._current.push(action);
   this._isDispatching = true;
 
   this._isPending = {};
@@ -147,11 +149,13 @@ function _thunkify(fn, action) {
     this._isHandled[action] = false;
 
     function fin() {
+      this._current.pop();
       this._isHandled[action] = true;
       done();
     }
 
-    debug('wait for \'%s\'', action);
+    this._current.push(action);
+    debug('\'%s\' -> \'%s\'', this._current[this._current.length - 2], action);
     fn(this.locals.payload, fin.bind(this));
 
   }
@@ -195,4 +199,5 @@ function _stopDispatching() {
   this._isPending = {};
   this._isHandled = {};
   this.locals = null;
+  this._current = [];
 }

@@ -24,7 +24,7 @@
   "dependencies": {
     "assertf": "^1.0.0",
     "async": "^0.9.0",
-    "debug": "^1.0.4"
+    "debug": "^2.0.0"
   },
   "files": [
     "index.js",

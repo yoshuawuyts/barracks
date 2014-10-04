@@ -1,6 +1,6 @@
 {
   "name": "barracks",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "An event dispatcher for the flux architecture",
   "main": "index.js",
   "scripts": {

@@ -2,7 +2,6 @@
 [![NPM version][npm-image]][npm-url]
 [![build status][travis-image]][travis-url]
 [![Test coverage][coveralls-image]][coveralls-url]
-[![Dependency Status][david-image]][david-url]
 [![Downloads][downloads-image]][downloads-url]
 
 Event dispatcher for the [flux architecture][flux]. Provides event composition
@@ -205,8 +204,6 @@ dispatcher('user_fetch');
 [travis-url]: https://travis-ci.org/yoshuawuyts/barracks
 [coveralls-image]: https://img.shields.io/coveralls/yoshuawuyts/barracks.svg?style=flat-square
 [coveralls-url]: https://coveralls.io/r/yoshuawuyts/barracks?branch=master
-[david-image]: http://img.shields.io/david/yoshuawuyts/wayfarer.svg?style=flat-square
-[david-url]: https://david-dm.org/yoshuawuyts/wayfarer
 [downloads-image]: http://img.shields.io/npm/dm/barracks.svg?style=flat-square
 [downloads-url]: https://npmjs.org/package/barracks
 

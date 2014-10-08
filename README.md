@@ -22,8 +22,8 @@ interface of only 3 functions.
 ```
 
 ## Installation
-```bash
-$ npm i --save barracks
+```sh
+npm install barracks
 ```
 
 ## Overview
@@ -196,7 +196,7 @@ dispatcher('user_fetch');
 ```
 
 ## License
-[MIT](https://tldrlegal.com/license/mit-license) © [Yoshua Wuyts](yoshuawuyts.com)
+[MIT](https://tldrlegal.com/license/mit-license)
 
 [npm-image]: https://img.shields.io/npm/v/barracks.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/barracks

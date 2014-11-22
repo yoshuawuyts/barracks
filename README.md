@@ -38,6 +38,7 @@ var dispatcher = barracks({
       console.log(user + ' got added');
       next();
     }
+  },
   courses: {
     get: function(next) {
       console.log('Get ' + this.payload);

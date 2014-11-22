@@ -136,7 +136,7 @@ var dispatcher = barracks({
 });
 
 dispatcher('init', 'fooBar');
-// -> console.log: 'fooBar'
+// => 'fooBar'
 ```
 
 #### ctx.locals=
@@ -161,6 +161,7 @@ var dispatcher = barracks({
 });
 
 dispatcher('fetch');
+// => 'asdf12345'
 ```
 
 ## License

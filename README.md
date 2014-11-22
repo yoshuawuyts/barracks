@@ -146,31 +146,19 @@ a token from a store and want to make it available to all subsequent functions.
 
 The payload provided by `dispatcher()` is available under `this.locals.payload`.
 ```js
-var request = require('request');
-
-// Initialize dispatcher.
-
 var dispatcher = barracks({
   add: function(next) {
-    request('myapi.co/api/auth', function(err, res) {
-      this.locals.token = res.token;
+      this.locals.token = 'asdf12345';
       next();
     });
   },
   fetch: function(next) {
     this.waitFor(['add'], function() {
-      var url = 'myapi.co/me?token=' + this.locals.token;
-      request(url, handleRequest);
-    });
-
-    function handleRequest(err, res) {
-      console.log(res);
+      console.log(this.locals.token);
       next();
-    }
+    });
   }
 });
-
-// Get user data from server.
 
 dispatcher('fetch');
 ```

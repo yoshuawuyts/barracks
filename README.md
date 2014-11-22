@@ -105,8 +105,9 @@ call `this.waitFor` to access the function from within a registered callback.
 ```js
 var dispatcher = barracks({
   init: function(next) {
+    console.log('1');
     this.waitFor(['add', 'listen'], function() {
-      console.log('3');
+      console.log('4');
       next();
     });
   },

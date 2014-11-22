@@ -59,8 +59,7 @@ dispatcher('users_add', 'Loki');
 
 ## API
 #### dispatcher = barracks(actions)
-Initialize a new `barracks` instance. The `actions` object should contain
-functions, namespaced at most one level deep. Returns a function.
+Initialize a new `barracks` instance. Returns a function.
 ```js
 // Initialize without namespaces.
 
@@ -103,58 +102,40 @@ dispatcher('users_add', {foo: 'bar'});
 Execute another function within the dispatcher before proceeding. Registered
 callbacks are always bound to the scope of the dispatcher, so you can just
 call `this.waitFor` to access the function from within a registered callback.
-
-In the example below `users_initalize` will delegate execution to `user_add` and
-`user_listen` before proceeding to execute its own code.
 ```js
-var userStore = require('simple-store')('user');
-var socket = require('sockjs-client');
-var request = require('request');
-
-// Initialize dispatcher.
-
 var dispatcher = barracks({
-  users: {
-    initialize: function(next) {
-      var arr = ['user_add', 'user_listen'];
-      this.waitFor(arr, function() {
-        console.log('initialized');
-        next();
-      });
-    },
-    add: function(next) {
-      request('myapi.co/api/users', function(err, res) {
-        userStore.set(res);
-        next();
-      });
-    },
-    listen: function(next) {
-      var sock = new socket('myapi.co/api/socket');
-      sock.onMessage(console.log);
+  init: function(next) {
+    this.waitFor(['add', 'listen'], function() {
+      console.log('3');
       next();
-    }
+    });
+  },
+  add: function(next) {
+    setTimeout(function() {
+      console.log('2');
+      done();
+    }, 10);
+  },
+  listen: function(next) {
+    console.log('3');
+    next();
   }
 });
 
-// Initialize the users store.
-
-dispatcher('users_initialize');
+dispatcher('init');
+// => 1 2 3
 ```
 
 #### ctx.payload
-`ctx.payload` contains the data provided by `dispatcher()`.
+`this.payload` contains the data provided by `dispatcher()`.
 ```js
 var dispatcher = barracks({
-  users: {
-    init: function(next) {
-      console.log(this.payload);
-    }
+  init: function(next) {
+    console.log(this.payload);
   }
 });
 
-// Initialize the users store.
-
-dispatcher('users_init', 'fooBar');
+dispatcher('init', 'fooBar');
 // -> console.log: 'fooBar'
 ```
 
@@ -170,30 +151,28 @@ var request = require('request');
 // Initialize dispatcher.
 
 var dispatcher = barracks({
-  users: {
-    add: function(next) {
-      request('myapi.co/api/auth', function(err, res) {
-        this.locals.token = res.token;
-        next();
-      });
-    },
-    fetch: function(next) {
-      this.waitFor(['user_add'], function() {
-        var url = 'myapi.co/me?token=' + this.locals.token;
-        request(url, handleRequest);
-      });
+  add: function(next) {
+    request('myapi.co/api/auth', function(err, res) {
+      this.locals.token = res.token;
+      next();
+    });
+  },
+  fetch: function(next) {
+    this.waitFor(['add'], function() {
+      var url = 'myapi.co/me?token=' + this.locals.token;
+      request(url, handleRequest);
+    });
 
-      function handleRequest(err, res) {
-        console.log(res);
-        next();
-      }
+    function handleRequest(err, res) {
+      console.log(res);
+      next();
     }
   }
 });
 
 // Get user data from server.
 
-dispatcher('user_fetch');
+dispatcher('fetch');
 ```
 
 ## License

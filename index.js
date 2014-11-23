@@ -85,9 +85,9 @@ dispatcher.dispatch = function(action, payload) {
 
 /**
  * Expose a delegation method to the registered actions. Calls `async.series()`
- * under the hood. Sets a 'pending' state to
+ * under the hood.
  *
- * @param {String[] |} ids
+ * @param {String[] | String} actions
  * @param {Function} done
  * @api public
  */

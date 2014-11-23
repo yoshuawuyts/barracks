@@ -34,7 +34,7 @@ function Dispatcher(actions) {
   assert.equal(typeof actions, 'object', 'actions should be an object');
   _assertActionsObject(actions);
 
-  this.locals = {};
+  this.state = {};
   this.payload = null;
 
   this._current = [];
@@ -69,7 +69,7 @@ dispatcher.dispatch = function(action, payload) {
   this._isHandled = {};
   this._isHandled[action] = false;
 
-  this.locals = {};
+  this.state = {};
   this.payload = payload;
 
   try {
@@ -174,7 +174,8 @@ function _thunkify(fn, action) {
  */
 
 function _getAction(action, arr, index) {
-  arr = arr || action.split('_');
+  if (/(_)/g.test(arr)) console.warn('barracks: the \'_\' separator is deprecated, use \':\' instead');
+  arr = arr || action.split(':').split('_');
   index = index || 0;
   var val = arr[index];
 
@@ -202,5 +203,5 @@ function _stopDispatching() {
   this._isHandled = {};
   this.payload = null;
   this._current = [];
-  this.locals = {};
+  this.state = {};
 }

@@ -8,7 +8,6 @@
     "no-warning-comments": 1,
     "no-native-reassign": 1,
     "no-invalid-regexp": 1,
-    "no-fallthrough": 1,
     "no-debugger": 1,
     "no-console": 1,
     "no-empty": 1,
@@ -27,16 +26,17 @@
     // stylistic errors
     "quotes": [2, "single", "avoid-escape"],
     "no-space-before-semi": 2,
-    "space-unary-word-ops": 2,
     "no-spaced-func": 2,
     "yoda": "always",
     "new-cap": 2,
 
     // mute
     "no-use-before-define": 0,
+    "no-multi-spaces": 0,
     "eol-last": 0,
     "strict": 0,
     "eqeqeq": 0,
-    "curly": 0
+    "curly": 0,
+    "semi": 0
   }
 }

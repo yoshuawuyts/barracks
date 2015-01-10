@@ -4,7 +4,9 @@
   "description": "An event dispatcher for the flux architecture",
   "main": "index.js",
   "scripts": {
-    "test": "make test"
+    "test": "NODE_ENV=test node test | colortape",
+    "test-cov": "NODE_ENV=test istanbul cover test.js",
+    "lint": "eslint ."
   },
   "repository": "yoshuawuyts/barracks",
   "keywords": [
@@ -15,11 +17,12 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "colortape": "^0.1.1",
     "coveralls": "~2.10.0",
+    "eslint": "^0.11.0",
     "istanbul": "~0.2.10",
     "make-lint": "^1.0.1",
-    "mocha": "~1.19.0",
-    "should": "~3.3.2"
+    "tape": "^3.0.3"
   },
   "dependencies": {
     "assertf": "^1.0.0",

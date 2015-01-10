@@ -1,229 +1,199 @@
-/**
- * Module dependencies
- */
 
-var barracks = require('./index.js');
+const test     = require('tape')
+const barracks = require('./index.js')
 
-/**
- * Test
- */
+test('barracks() should assert argument types', function(t) {
+  t.plan(4)
+  t.throws(barracks.bind(barracks), /object should be passed as/)
+  t.throws(barracks.bind(barracks, 123), /actions should be an object/)
+  t.throws(barracks.bind(barracks, {users: 123}), 'action should be an function')
+  t.throws(barracks.bind(barracks, {users: {add: 123}}), 'action should be an function')
+})
 
-describe('dispatcher = barracks()', function() {
-  it('should assert argument types', function() {
-    barracks.bind(barracks)
-      .should.throw('an \'actions\' object should be passed as an argument');
+test('dispatcher = barracks() should return a function', function(t) {
+  t.plan(1)
 
-    barracks.bind(barracks, 123)
-      .should.throw('actions should be an object');
+  const dispatcher = barracks({
+    users: {
+      add: function() {},
+      remove: function() {}
+    },
+    courses: {
+      get: function() {},
+      put: function() {}
+    }
+  })
 
-    barracks.bind(barracks, {users: 123})
-      .should.throw('action should be a function');
+  t.equal(typeof dispatcher, 'function')
+})
 
-    barracks.bind(barracks, {users: {add: 123}})
-      .should.throw('action should be a function');
-  });
+test('dispatcher() should assert argument types', function(t) {
+  t.plan(4)
 
-  it('should return a function', function() {
-    var dispatcher = barracks({
-      users: {
-        add: function() {},
-        remove: function() {}
+  const dispatcher = barracks({
+    foo: {bar: {baz: function(){}}}
+  })
+
+  t.throws(dispatcher.bind(dispatcher, {}), /should be a string/)
+  t.throws(dispatcher.bind(dispatcher, 'something'), /is not registered/)
+  t.throws(dispatcher.bind(dispatcher, 'foo_bar'), /is not registered/)
+  t.throws(dispatcher.bind(dispatcher, 'foo_bar_baz_err'), /is not registered/)
+})
+
+test('dispatcher() should call a cb when done', function(t) {
+  t.plan(1)
+
+  const dispatcher = barracks({
+    users: {
+      add: function() {},
+      remove: function() {}
+    },
+    courses: {
+      get: function() {},
+      put: function() {this.payload()}
+    }
+  })
+
+  dispatcher('courses_put', function() {
+    t.ok(true, 'cb called')
+  })
+})
+
+test('dispatcher should throw if called while in progress', function(t) {
+  t.plan(2)
+  const dispatcher = barracks({
+    users: {
+      add: function() {t.fails()},
+      remove: function() {t.fails()}
+    },
+    courses: {
+      get: function() {t.fails()},
+      put: function() {
+        t.throws(dispatcher.bind(this, 'users_add'), /in the middle of a dispatch/)
+        this.payload()
+      }
+    }
+  })
+
+  dispatcher('courses_put', function() {t.ok(true, 'end')})
+})
+
+test('dispatcher.waitFor() should assert input', function(t) {
+  t.plan(2)
+  const dispatcher = barracks({
+    courses: {
+      get: function() {t.fail()},
+      put: function() {
+        t.throws(dispatcher.bind(this, 'courses_get'), /in the middle of a dispatch/)
+        this.payload()
+      }
+    }
+  })
+
+  dispatcher('courses_put', function() {
+    t.ok(true, 'end')
+  })
+})
+
+test('dispatcher.waitFor should wat for subcalls to next', function(t) {
+  t.plan(2)
+
+  var count = 0
+
+  const dispatcher = barracks({
+    users: {
+      init: function(next) {
+        this.waitFor(['users_foo', 'users_bar'], function() {
+          t.equal(count, 2)
+          this.payload()
+        })
       },
-      courses: {
-        get: function() {},
-        put: function() {}
-      }
-    });
-
-    dispatcher.should.be.type('function');
-  });
-});
-
-describe('dispatcher()', function() {
-
-  it('should assert argument types', function() {
-    var dispatcher = barracks({
-      foo: {bar: {baz: function(){}}}
-    });
-
-    dispatcher.bind(dispatcher, {})
-      .should.throw('action \'[object Object]\' should be a string');
-
-    dispatcher.bind(dispatcher, 'something')
-      .should.throw('action \'something\' is not registered');
-
-    dispatcher.bind(dispatcher, 'foo_bar')
-      .should.throw('action \'foo_bar\' is not registered');
-
-    dispatcher.bind(dispatcher, 'foo_bar_baz_err')
-      .should.throw('action \'foo_bar_baz_err\' is not registered');
-  });
-
-  it('should call actions', function(done) {
-
-    var dispatcher = barracks({
-      users: {
-        add: function() {},
-        remove: function() {}
+      foo: function(next) {
+        setTimeout(function() {
+          count++
+          next()
+        }, 10)
       },
-      courses: {
-        get: function() {},
-        put: function() {this.payload()}
+      bar: function(next) {
+        setTimeout(function() {
+          count++
+          next()
+        }, 5)
       }
-    });
+    }
+  })
 
-    dispatcher('courses_put', done);
-  });
+  dispatcher('users_init', function() {
+    t.ok(true, 'end')
+  })
+})
 
-  it('should call a callback when done', function(done) {
-
-    var dispatcher = barracks({
-      users: {
-        add: function() {},
-        remove: function() {}
+test('dispatcher.waitFor() should catch circular dependencies', function(t) {
+  t.plan(2)
+  const dispatcher = barracks({
+    courses: {
+      foo: function(next) {
+        this.waitFor('courses_get', function() {
+          this.locals.fn(true, 'done')
+        })
       },
-      courses: {
-        get: function() {},
-        put: function() {this.payload()}
-      }
-    });
-
-    dispatcher('courses_put', done);
-  });
-
-  it('should throw if called while in progress', function(done) {
-
-    var dispatcher = barracks({
-      users: {
-        add: function() {},
-        remove: function() {}
+      get: function(next) {
+        this.locals.fn = t.ok
+        next()
       },
-      courses: {
-        get: function() {},
-        put: function() {
-          dispatcher.bind(this, 'users_add')
-            .should.throw('cannot dispatch \'users_add\' in the middle of a dispatch');
-          this.payload();
-        }
+      put: function(next) {
+        t.throws(this.waitFor.bind(this, 'courses_put'), /circular dependency/)
+        next()
       }
-    });
+    }
+  })
 
-    dispatcher('courses_put', done);
-  });
-});
+  dispatcher('courses_put')
+  dispatcher('courses_foo')
+})
 
-describe('dispatcher.waitFor()', function() {
-  it('should assert argument types', function(done) {
+test('dispatcher.waitFor() should not throw if a fn has already been called', function(t) {
+  t.plan(1)
 
-    var dispatcher = barracks({
-      courses: {
-        get: function() {},
-        put: function() {
-          dispatcher.bind(this, 'courses_get')
-            .should.throw('cannot dispatch \'courses_get\' in the middle of a dispatch');
-          this.payload();
-        }
+  const dispatcher = barracks({
+    courses: {
+      get: function(next) {
+        next()
+      },
+      foo: function(next) {
+        this.waitFor('courses_get', function() {
+          next()
+        })
+      },
+      bar: function(next) {
+        this.waitFor(['courses_get', 'courses_get', 'courses_foo'], function() {
+          t.ok(true, 'end')
+          next()
+        })
       }
-    });
+    }
+  })
 
-    dispatcher('courses_put', done);
-  });
+  dispatcher('courses_bar')
+})
 
-  it('should wait for subcalls to nextish', function(done) {
+test('ctx.locals should exist in a shared context', function(t) {
+  t.plan(2)
 
-    var count = 0;
-    var dispatcher = barracks({
-      users: {
-        init: function(next) {
-          this.waitFor(['users_foo', 'users_bar'], function() {
-            count.should.eql(2);
-            this.payload();
-          });
-        },
-        foo: function(next) {
-          setTimeout(function() {
-            count++;
-            next();
-          }, 10);
-        },
-        bar: function(next) {
-          setTimeout(function() {
-            count++;
-            next();
-          }, 5);
-        }
+  const dispatcher = barracks({
+    courses: {
+      get: function(next) {
+        this.locals.done = this.payload
+        next()
+      },
+      put: function(next) {
+        t.equal(typeof this.payload, 'function')
+        this.waitFor('courses_get', function() {
+          this.locals.done(true, 'end')
+        })
       }
-    });
+    }
+  })
 
-    dispatcher('users_init', done);
-  });
-
-  it('should catch circular dependencies', function(done) {
-    var dispatcher = barracks({
-      courses: {
-        foo: function(next) {
-          this.waitFor('courses_get', function() {
-            this.locals.fn();
-          });
-        },
-        get: function(next) {
-          this.locals.fn = done;
-          next();
-        },
-        put: function(next) {
-
-          this.waitFor.bind(this, 'courses_put')
-            .should.throw('circular dependency detected while waiting for \'courses_put\'');
-          next();
-        }
-      }
-    });
-
-    dispatcher('courses_put');
-    dispatcher('courses_foo');
-  });
-
-  it('should not throw if a fn has already been called', function(done) {
-    var dispatcher = barracks({
-      courses: {
-        get: function(next) {
-          next();
-        },
-        foo: function(next) {
-          this.waitFor('courses_get', function() {
-            next();
-          });
-        },
-        bar: function(next) {
-          this.waitFor(['courses_get', 'courses_get', 'courses_foo'], function() {
-            done();
-            next();
-          });
-        }
-      }
-    });
-
-    dispatcher('courses_bar');
-  });
-});
-
-describe('ctx.locals', function() {
-  it('should exist in a shared context', function(done) {
-    var dispatcher = barracks({
-      courses: {
-        get: function(next) {
-          this.locals.done = this.payload;
-          next();
-        },
-        put: function(next) {
-          this.payload.should.be.of.type('function');
-          this.waitFor('courses_get', function() {
-            this.locals.done();
-          });
-        }
-      }
-    });
-
-    dispatcher('courses_put', done);
-  });
+  dispatcher('courses_put', t.ok)
 })

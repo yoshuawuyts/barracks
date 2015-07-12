@@ -1,198 +1,141 @@
 const test = require('tape')
 const barracks = require('./index.js')
 
-test('barracks() should assert argument types', function (t) {
+test('.on() should assert input arguments', function (t) {
+  t.plan(2)
+  const d = barracks()
+  t.throws(d.on.bind(null), /string/)
+  t.throws(d.on.bind(null, ''), /function/)
+})
+
+test('.on() should bind functions', function (t) {
+  t.plan(3)
+  const d = barracks()
+  const key = 'foo'
+  d.on(key, noop)
+  t.ok(Array.isArray(d._actions[key]), 'is array')
+  t.equal(d._actions[key].length, 1)
+  d.on('foo', noop)
+  t.equal(d._actions[key].length, 2)
+})
+
+test('.emit() should assert action exists', function (t) {
+  t.plan(1)
+  const d = barracks()
+  t.throws(d.bind(null, 'yo'), /action/)
+})
+
+test('.emit() should call a function', function (t) {
+  t.plan(2)
+  const d = barracks()
+  d.on('foo', function () {
+    t.pass('is called')
+  })
+  d('foo')
+  d.on('bar', function (data) {
+    t.equal(data, 'hello you')
+  })
+  d('bar', 'hello you')
+})
+
+test('wait() should be able to chain 2 functions', function (t) {
   t.plan(4)
-  t.throws(barracks.bind(barracks), /object should be passed as/)
-  t.throws(barracks.bind(barracks, 123), /actions should be an object/)
-  t.throws(barracks.bind(barracks, {users: 123}), 'action should be an function')
-  t.throws(barracks.bind(barracks, {users: {add: 123}}), 'action should be an function')
+  const d = barracks()
+  d.on('foo', function (data, wait) {
+    t.pass('is called')
+    t.equal(typeof wait, 'function')
+    wait('bar')
+  })
+  d.on('bar', function (data) {
+    t.pass('is called')
+    t.equal(data, 'hello me')
+  })
+  d('foo', 'hello me')
 })
 
-test('dispatcher = barracks() should return a function', function (t) {
+test('wait should be able to chain 4 functions', function (t) {
+  t.plan(10)
+  const d = barracks()
+  d.on('foo', function (data, wait) {
+    t.pass('is called')
+    return wait(['bar', 'bin', 'baz'])
+  })
+  d.on('bar', cbFn)
+  d.on('bin', cbFn)
+  d.on('baz', cbFn)
+  d('foo', 'hello me')
+  function cbFn (data, wait) {
+    t.pass('is called')
+    t.equal(data, 'hello me')
+    t.equal(typeof wait, 'function')
+    wait()
+  }
+})
+
+test('wait() should call a callback on end', function (t) {
+  t.plan(2)
+  const d = barracks()
+  var i = 0
+  d.on('foo', function (data, wait) {
+    return wait('bar', function () {
+      t.equal(i, 1)
+    })
+  })
+  d.on('bar', function (data) {
+    t.pass('is called')
+    i++
+  })
+  d('foo', 'hello me')
+})
+
+test('wait() should be able to call functions 4 levels deep', function (t) {
+  t.plan(16)
+  const d = barracks()
+  var n = 0
+  d.on('foo', function (data, wait) {
+    t.pass('is called')
+    t.equal(data, 'hello me')
+    t.equal(typeof wait, 'function')
+    t.equal(n++, 0)
+    return wait('bar')
+  })
+  d.on('bar', function (data, wait) {
+    t.pass('is called')
+    t.equal(data, 'hello me')
+    t.equal(typeof wait, 'function')
+    t.equal(n++, 1)
+    return wait('bin')
+  })
+  d.on('bin', function (data, wait) {
+    t.pass('is called')
+    t.equal(data, 'hello me')
+    t.equal(typeof wait, 'function')
+    t.equal(n++, 2)
+    return wait('bon')
+  })
+  d.on('bon', function (data, wait) {
+    t.pass('is called')
+    t.equal(data, 'hello me')
+    t.equal(typeof wait, 'function')
+    t.equal(n++, 3)
+  })
+  d('foo', 'hello me')
+})
+
+test('.emit() should emit `error` on circular dependencies', function (t) {
   t.plan(1)
-
-  const dispatcher = barracks({
-    users: {
-      add: function () {},
-      remove: function () {}
-    },
-    courses: {
-      get: function () {},
-      put: function () {}
-    }
+  const d = barracks()
+  d.on('bin', function (data, wait) {
+    return wait('bar')
   })
-
-  t.equal(typeof dispatcher, 'function')
+  d.on('bar', function (data, wait) {
+    return wait('bin')
+  })
+  d.on('error', function (err) {
+    t.equal(err, 'circular dependency detected')
+  })
+  d('bin')
 })
 
-test('dispatcher() should assert argument types', function (t) {
-  t.plan(4)
-
-  const dispatcher = barracks({
-    foo: {bar: {baz: function () {}}}
-  })
-
-  t.throws(dispatcher.bind(dispatcher, {}), /should be a string/)
-  t.throws(dispatcher.bind(dispatcher, 'something'), /is not registered/)
-  t.throws(dispatcher.bind(dispatcher, 'foo_bar'), /is not registered/)
-  t.throws(dispatcher.bind(dispatcher, 'foo_bar_baz_err'), /is not registered/)
-})
-
-test('dispatcher() should call a cb when done', function (t) {
-  t.plan(1)
-
-  const dispatcher = barracks({
-    users: {
-      add: function () {},
-      remove: function () {}
-    },
-    courses: {
-      get: function () {},
-      put: function () {this.payload()}
-    }
-  })
-
-  dispatcher('courses_put', function () {
-    t.ok(true, 'cb called')
-  })
-})
-
-test('dispatcher should throw if called while in progress', function (t) {
-  t.plan(2)
-  const dispatcher = barracks({
-    users: {
-      add: function () {t.fails()},
-      remove: function () {t.fails()}
-    },
-    courses: {
-      get: function () {t.fails()},
-      put: function () {
-        t.throws(dispatcher.bind(this, 'users_add'), /in the middle of a dispatch/)
-        this.payload()
-      }
-    }
-  })
-
-  dispatcher('courses_put', function () {t.ok(true, 'end')})
-})
-
-test('dispatcher.waitFor() should assert input', function (t) {
-  t.plan(2)
-  const dispatcher = barracks({
-    courses: {
-      get: function () {t.fail()},
-      put: function () {
-        t.throws(dispatcher.bind(this, 'courses_get'), /in the middle of a dispatch/)
-        this.payload()
-      }
-    }
-  })
-
-  dispatcher('courses_put', function () {
-    t.ok(true, 'end')
-  })
-})
-
-test('dispatcher.waitFor should wat for subcalls to next', function (t) {
-  t.plan(2)
-
-  var count = 0
-
-  const dispatcher = barracks({
-    users: {
-      init: function (next) {
-        this.waitFor(['users_foo', 'users_bar'], function () {
-          t.equal(count, 2)
-          this.payload()
-        })
-      },
-      foo: function (next) {
-        setTimeout(function () {
-          count++
-          next()
-        }, 10)
-      },
-      bar: function (next) {
-        setTimeout(function () {
-          count++
-          next()
-        }, 5)
-      }
-    }
-  })
-
-  dispatcher('users_init', function () {
-    t.ok(true, 'end')
-  })
-})
-
-test('dispatcher.waitFor() should catch circular dependencies', function (t) {
-  t.plan(2)
-  const dispatcher = barracks({
-    courses: {
-      foo: function (next) {
-        this.waitFor('courses_get', function () {
-          this.locals.fn(true, 'done')
-        })
-      },
-      get: function (next) {
-        this.locals.fn = t.ok
-        next()
-      },
-      put: function (next) {
-        t.throws(this.waitFor.bind(this, 'courses_put'), /circular dependency/)
-        next()
-      }
-    }
-  })
-
-  dispatcher('courses_put')
-  dispatcher('courses_foo')
-})
-
-test('dispatcher.waitFor() should not throw if a fn has already been called', function (t) {
-  t.plan(1)
-
-  const dispatcher = barracks({
-    courses: {
-      get: function (next) {
-        next()
-      },
-      foo: function (next) {
-        this.waitFor('courses_get', function () {
-          next()
-        })
-      },
-      bar: function (next) {
-        this.waitFor(['courses_get', 'courses_get', 'courses_foo'], function () {
-          t.ok(true, 'end')
-          next()
-        })
-      }
-    }
-  })
-
-  dispatcher('courses_bar')
-})
-
-test('ctx.locals should exist in a shared context', function (t) {
-  t.plan(2)
-
-  const dispatcher = barracks({
-    courses: {
-      get: function (next) {
-        this.locals.done = this.payload
-        next()
-      },
-      put: function (next) {
-        t.equal(typeof this.payload, 'function')
-        this.waitFor('courses_get', function () {
-          this.locals.done(true, 'end')
-        })
-      }
-    }
-  })
-
-  dispatcher('courses_put', t.ok)
-})
+function noop () {}
+noop()

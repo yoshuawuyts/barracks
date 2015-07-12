@@ -4,166 +4,90 @@
 [![Test coverage][coveralls-image]][coveralls-url]
 [![Downloads][downloads-image]][downloads-url]
 
-Event dispatcher for the [flux architecture][flux]. Provides event composition
-through `this.waitFor()` and checks for circular dependencies with a small
-interface of only 3 functions.
-
-```
-╔═════╗        ╔════════════╗       ╔════════╗       ╔═════════════════╗
-║ API ║<──────>║ Middleware ║──────>║ Stores ║──────>║ View Components ║
-╚═════╝        ╚════════════╝       ╚════════╝       ╚═════════════════╝
-                     ^                                        │
-                     │                                        │
-               ╔════════════╗                                 │
-               ║ Dispatcher ║                                 │
-               ╚════════════╝                                 │
-                     ^                                        │
-                     └────────────────────────────────────────┘
-```
+Action dispatcher for unidirectional data flows. Provides action composition
+and checks for circular dependencies with a small interface of only 3
+functions.
 
 ## Installation
 ```sh
-npm install barracks
+$ npm install barracks
 ```
 
-## Overview
+## Usage
 ````js
-var barracks = require('barracks');
+const barracks = require('barracks')
 
-// Initialize dispatcher.
+const dispatcher = barracks()
+const store = []
 
-var dispatcher = barracks({
-  users: {
-    add: function(next) {
-      console.log(user + ' got added');
-      next();
-    }
-  },
-  courses: {
-    get: function(next) {
-      console.log('Get ' + this.payload);
-      next();
-    },
-    set: function(next) {
-      console.log('Set ' + this.payload);
-      next();
-    }
-  }
-});
+dispatcher.on('error', err => console.log(err))
+dispatcher.on('insert', data => store.push(data.name))
+dispatcher.on('upsert', (data, wait) => {
+  const index = store.indexOf(data.prevName)
+  if (index !== -1) return wait('insert')
+  store[index] = data.newName
+})
 
-// Dispatch an event.
-
-dispatcher('users_add', 'Loki');
-// => 'Loki got added'
+dispatcher('insert', {name: 'Loki'})
+dispatcher('upsert', {name: 'Loki', newName: 'Tobi'})
 ````
 
 ## API
-#### dispatcher = barracks(actions)
-Initialize a new `barracks` instance. Returns a function.
-```js
-// Initialize without namespaces.
+### dispatcher = barracks()
+Initialize a new `barracks` instance.
 
-var dispatcher = barracks({
-  user: function() {},
-  group: function() {}
-});
+### dispatcher.on(action, cb(data, wait))
+Register a new action. Checks for circular dependencies when dispatching.  The
+callback receives the passed in data and a `wait(actions[, cb])` function that
+can be used to call other actions internally. `wait()` accepts a single action
+or an array of actions and an optional callback as the final argument.
 
-// Initialize with namespaces.
+### dispatcher(event[, data])
+Call an action and execute the corresponding callback. Alias:
+`dispatcher.emit(event[, data])`.
 
-var dispatcher = barracks({
-  users: {
-    add: function() {},
-    remove: function() {}
-  },
-  courses: {
-    get: function() {},
-    put: function() {}
-  }
-});
-```
+## Events
+### .on('error', cb(err))
+Handle errors. Warns if circular dependencies exists.
 
-#### dispatcher(action, data)
-`barracks()` returns a dispatcher function which can be called to dispatch an
-action. By dispatching an action you call the corresponding function from
-the dispatcher and pass it data. You can think of it as just calling a
-function.
+## FAQ
+### What is an "action dispatcher"?
+An action dispatcher gets data from one place to another without tightly
+coupling the code. The best known use case for this is in the `flux` pattern.
+Say you want to update a piece of data (for example a user's name), instead of
+directly calling the update logic inside the view the action calls a function
+that updates the user's name for you. Now all the views that need to update a
+user's name can call the same action and pass in the relevant data.  This
+pattern tends to make views more robust and easier to maintain.
 
-In order to access namespaced functions you can delimit your string with
-underscores. So to access `courses.get` you'd dispatch the string `courses_get`.
-````js
-// Call a non-namespaced action.
-dispatcher('group', [123, 'hello']);
+### Why did you build this?
+Passing messages around should not be complicated. Many `flux` implementations
+casually throw around framework specific terminology making new users feel
+silly for not following along. I don't like that. `barracks` is a package that
+takes node's familiar `EventEmitter` interface and adapts it for use as an
+action dispatcher.
 
-// Call a namespaced action.
-dispatcher('users_add', {foo: 'bar'});
-````
+### I want to start using barracks, but I'm not sure how to use it
+That's fine, that means this readme needs to be improved. Would you mind
+opening an [issue](https://github.com/yoshuawuyts/barracks/issues) and explain
+what you don't understand?  I want `barracks` to be comprehensive for
+developers of any skill level, so don't hesitate to ask questions if you're
+unsure about something.
 
-#### ctx.waitFor(action)
-Execute another function within the dispatcher before proceeding. Registered
-callbacks are always bound to the scope of the dispatcher, so you can just
-call `this.waitFor` to access the function from within a registered callback.
-```js
-var dispatcher = barracks({
-  init: function(next) {
-    console.log('1');
-    this.waitFor(['add', 'listen'], function() {
-      console.log('4');
-      next();
-    });
-  },
-  add: function(next) {
-    setTimeout(function() {
-      console.log('2');
-      done();
-    }, 10);
-  },
-  listen: function(next) {
-    console.log('3');
-    next();
-  }
-});
+### Why didn't you include feature X?
+An action dispatcher doesn't a lot of features to pass a message from A to B.
+`barracks` was built for flexibility. If you feel you're repeating yourself a
+lot with `barracks` or are missing a feature, feel free to wrap and extend it
+however you like.
 
-dispatcher('init');
-// => 1 2 3
-```
+### What data store do you recommend using with barracks?
+In flux it's common to store your application state in a data store.I think a
+data store should be immutable, single-instance and allow data access through
+cursors / lenses.  At the moment of writing I haven't found a data store I'm
+pleased with, so I'll probably end up writing one in the near future.
 
-#### ctx.payload
-`this.payload` contains the data provided by `dispatcher()`.
-```js
-var dispatcher = barracks({
-  init: function(next) {
-    console.log(this.payload);
-  }
-});
-
-dispatcher('init', 'fooBar');
-// => 'fooBar'
-```
-
-#### ctx.locals=
-`this.locals` is shared between all (delegated) function calls and acts as the
-location to share data between function calls. For example when you retrieve
-a token from a store and want to make it available to all subsequent functions.
-
-The payload provided by `dispatcher()` is available under `this.locals.payload`.
-```js
-var dispatcher = barracks({
-  add: function(next) {
-      this.locals.token = 'asdf12345';
-      next();
-    });
-  },
-  fetch: function(next) {
-    this.waitFor(['add'], function() {
-      console.log(this.locals.token);
-      next();
-    });
-  }
-});
-
-dispatcher('fetch');
-// => 'asdf12345'
-```
+## See Also
+- [wayfarer](https://github.com/yoshuawuyts/wayfarer) -  composable trie based route
 
 ## License
 [MIT](https://tldrlegal.com/license/mit-license)

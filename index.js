@@ -44,7 +44,7 @@ Dispatcher.prototype.dispatch = function (action, payload) {
   this.payload = payload
 
   try {
-    const fn = _getAction.call(this, action)
+    var fn = _getAction.call(this, action)
   } catch (e) {
     _stopDispatching.call(this)
     throw e
@@ -79,7 +79,7 @@ Dispatcher.prototype.waitFor = function (actions, done) {
 function _assertActionsObject (actions) {
   Object.keys(actions).forEach(function (key) {
     const action = actions[key]
-    if ('object' == typeof action) return _assertActionsObject(action)
+    if (typeof action === 'object') return _assertActionsObject(action)
     assert.equal(typeof action, 'function', 'action should be a function')
   })
 }
@@ -121,7 +121,7 @@ function _getAction (action, arr, index) {
   index = index || 0
   const val = arr[index]
 
-  if ('object' == typeof val) return _getAction.call(this, action, arr, index++)
+  if (typeof val === 'object') return _getAction.call(this, action, arr, index++)
 
   var fn = this._actions
   arr.forEach(function (obj, i) {

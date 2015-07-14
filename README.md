@@ -170,7 +170,7 @@ dispatcher('fetch');
 
 [npm-image]: https://img.shields.io/npm/v/barracks.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/barracks
-[travis-image]: https://img.shields.io/travis/yoshuawuyts/barracks.svg?style=flat-square
+[travis-image]: https://img.shields.io/travis/yoshuawuyts/barracks/master.svg?style=flat-square
 [travis-url]: https://travis-ci.org/yoshuawuyts/barracks
 [coveralls-image]: https://img.shields.io/coveralls/yoshuawuyts/barracks.svg?style=flat-square
 [coveralls-url]: https://coveralls.io/r/yoshuawuyts/barracks?branch=master

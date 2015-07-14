@@ -4,16 +4,16 @@
   "description": "An event dispatcher for the flux architecture",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint .",
     "test": "NODE_ENV=test node test | colortape",
-    "test-cov": "NODE_ENV=test istanbul cover test.js",
-    "lint": "eslint ."
+    "test-cov": "NODE_ENV=test istanbul cover test.js"
   },
   "repository": "yoshuawuyts/barracks",
   "keywords": [
-    "react-component",
     "dispatcher",
     "flux",
-    "react"
+    "react",
+    "react-component"
   ],
   "license": "MIT",
   "devDependencies": {
@@ -26,12 +26,12 @@
   },
   "dependencies": {
     "assertf": "^1.0.0",
-    "async": "^0.9.0",
-    "debug": "^2.0.0"
+    "debug": "^2.0.0",
+    "run-series": "^1.1.2"
   },
   "files": [
-    "index.js",
+    "HISTORY.md",
     "LICENSE",
-    "HISTORY.md"
+    "index.js"
   ]
 }

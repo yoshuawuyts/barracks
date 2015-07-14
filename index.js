@@ -1,6 +1,6 @@
 const debug = require('debug')('barracks')
 const assert = require('assertf')
-const async = require('async')
+const series = require('run-series')
 
 module.exports = Dispatcher
 
@@ -55,7 +55,7 @@ Dispatcher.prototype.dispatch = function (action, payload) {
 }
 
 // expose a delegation method to the registered
-// actions. Calls `async.series()` under the hood
+// actions. Calls `run-series()` under the hood
 // str|[str], fn -> null
 Dispatcher.prototype.waitFor = function (actions, done) {
   done = done || function () {}
@@ -71,7 +71,7 @@ Dispatcher.prototype.waitFor = function (actions, done) {
   })
 
   const nwArr = arr.concat(done.bind(this))
-  async.series(nwArr)
+  series(nwArr)
 }
 
 // deep assert the actions object

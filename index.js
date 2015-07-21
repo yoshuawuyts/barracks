@@ -62,8 +62,11 @@ function dispatcher () {
           stack.push(name)
 
           if (fn.length === 2) return fn(data, retFn)
-          fn(data)
-          end()
+          else {
+            fn(data)
+            stack.pop()
+            done()
+          }
 
           // execute `wait()` and `done()`
           // to both delegate new `series()` calls
@@ -76,16 +79,9 @@ function dispatcher () {
 
             function endWrap () {
               cb()
-              end()
+              stack.pop()
+              done()
             }
-          }
-
-          // pop name from stack
-          // and exit series call
-          // null -> null
-          function end () {
-            stack.pop()
-            done()
           }
         }
       }

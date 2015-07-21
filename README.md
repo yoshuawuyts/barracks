@@ -68,16 +68,21 @@ takes node's familiar `EventEmitter` interface and adapts it for use as an
 action dispatcher.
 
 ### I want to use barracks, but I'm not sure where to start
-That's fine, that means this readme needs to be improved. Would you mind
+That's fine, but it also means this readme needs to be improved. Would you mind
 opening an [issue](https://github.com/yoshuawuyts/barracks/issues) and explain
-what you don't understand? I want `barracks` to be comprehensive for developers
-of any skill level, so don't hesitate to ask questions if you're unsure about
-something.
+what you're having difficulty with? I want `barracks` to be comprehensive for
+developers of any skill level, so don't hesitate to ask questions if you're
+unsure about something.
+
+### Can I use flux standard actions with barracks?
+[Yes you can](https://github.com/yoshuawuyts/barracks/blob/master/examples/flux-standard-action.js)
+use [flux standard action](https://github.com/acdlite/flux-standard-action)s
+with `barracks`.
 
 ### Why didn't you include feature X?
-An action dispatcher doesn't a lot of features to pass a message from A to B.
-`barracks` was built for flexibility. If you feel you're repeating yourself a
-lot with `barracks` or are missing a feature, feel free to wrap and extend it
+An action dispatcher doesn't need a lot of features to pass a message from A to
+B. `barracks` was built for flexibility. If you feel you're repeating yourself
+a lot with `barracks` or are missing a feature, feel free to wrap and extend it
 however you like.
 
 ### What data store do you recommend using with barracks?

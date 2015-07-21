@@ -2,6 +2,7 @@ const barracks = require('barracks')
 
 // This is an example of using multiple
 // delegations with `barracks`.
+
 const d = barracks()
 
 d.on('foo', (data, wait) => {

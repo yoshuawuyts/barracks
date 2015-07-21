@@ -67,12 +67,12 @@ silly for not following along. I don't like that. `barracks` is a package that
 takes node's familiar `EventEmitter` interface and adapts it for use as an
 action dispatcher.
 
-### I want to start using barracks, but I'm not sure how to use it
+### I want to use barracks, but I'm not sure where to start
 That's fine, that means this readme needs to be improved. Would you mind
 opening an [issue](https://github.com/yoshuawuyts/barracks/issues) and explain
-what you don't understand?  I want `barracks` to be comprehensive for
-developers of any skill level, so don't hesitate to ask questions if you're
-unsure about something.
+what you don't understand? I want `barracks` to be comprehensive for developers
+of any skill level, so don't hesitate to ask questions if you're unsure about
+something.
 
 ### Why didn't you include feature X?
 An action dispatcher doesn't a lot of features to pass a message from A to B.

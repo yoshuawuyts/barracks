@@ -137,5 +137,17 @@ test('.emit() should emit `error` on circular dependencies', function (t) {
   d('bin')
 })
 
+test('.emit() should throw if no error handler is bound', function (t) {
+  t.plan(1)
+  const d = barracks()
+  d.on('bin', function (data, wait) {
+    return wait('bar')
+  })
+  d.on('bar', function (data, wait) {
+    return wait('bin')
+  })
+  t.throws(d.bind(null, 'bin'), /unhandled 'error' event/)
+})
+
 function noop () {}
 noop()

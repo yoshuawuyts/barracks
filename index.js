@@ -70,11 +70,12 @@ function dispatcher () {
           // handle cb's, and exit once done
           // (str, fn) -> null
           function retFn (action, cb) {
+            cb = cb || function () {}
             if (action) return wait(action, endWrap)
             endWrap()
 
             function endWrap () {
-              if (cb) cb()
+              cb()
               end()
             }
           }
@@ -93,8 +94,10 @@ function dispatcher () {
     // emit an error
     // any -> null
     function emitErr (err) {
-      const emitter = actions.error ? actions.error[0] : function () {}
-      emitter(err)
+      if (!actions.error) {
+        throw new Error("unhandled 'error' event")
+      }
+      actions.error[0](err)
     }
   }
 }

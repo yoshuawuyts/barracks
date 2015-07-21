@@ -23,7 +23,7 @@ const store = []
 dispatcher.on('error', err => console.log(err))
 dispatcher.on('insert', data => store.push(data.name))
 dispatcher.on('upsert', (data, wait) => {
-  const index = store.indexOf(data.prevName)
+  const index = store.indexOf(data.newName)
   if (index !== -1) return wait('insert')
   store[index] = data.newName
 })

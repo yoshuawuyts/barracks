@@ -81,9 +81,9 @@ lot with `barracks` or are missing a feature, feel free to wrap and extend it
 however you like.
 
 ### What data store do you recommend using with barracks?
-In flux it's common to store your application state in a data store.I think a
+In flux it's common to store your application state in a data store. I think a
 data store should be immutable, single-instance and allow data access through
-cursors / lenses.  At the moment of writing I haven't found a data store I'm
+cursors / lenses. At the moment of writing I haven't found a data store I'm
 pleased with, so I'll probably end up writing one in the near future.
 
 ## See Also

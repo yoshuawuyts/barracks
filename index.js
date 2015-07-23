@@ -1,4 +1,5 @@
 // const debug = require('debug')('barracks')
+const isFsa = require('flux-standard-action').isFSA
 const series = require('run-series')
 const assert = require('assert')
 
@@ -30,6 +31,10 @@ function dispatcher () {
   // execute the corresponding callback
   // (str, obj?) -> prom
   function emit (action, data) {
+    if (isFsa(action)) {
+      data = action
+      action = action.type
+    }
     assert.ok(Array.isArray(actions[action]), 'action exists')
     const fn = actions[action][0]
     const stack = [action]

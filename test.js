@@ -149,5 +149,16 @@ test('.emit() should throw if no error handler is bound', function (t) {
   t.throws(d.bind(null, 'bin'), /unhandled 'error' event/)
 })
 
+test('.emit() should be able to handle flux standard actions', function (t) {
+  t.plan(2)
+  const d = barracks()
+
+  d.on('foo', function (data) {
+    t.equal(data.type, 'foo')
+    t.equal(data.payload, 'bar')
+  })
+  d({ type: 'foo', payload: 'bar' })
+})
+
 function noop () {}
 noop()

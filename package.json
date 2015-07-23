@@ -10,12 +10,12 @@
   },
   "repository": "yoshuawuyts/barracks",
   "keywords": [
-    "dispatcher",
-    "flux",
     "action",
-    "minimal",
+    "dispatcher",
     "emitter",
     "event",
+    "flux",
+    "minimal",
     "react",
     "react-component"
   ],
@@ -29,11 +29,12 @@
   },
   "dependencies": {
     "debug": "^2.0.0",
+    "flux-standard-action": "^0.6.0",
     "run-series": "^1.1.2"
   },
   "files": [
-    "README.md",
     "LICENSE",
+    "README.md",
     "index.js"
   ]
 }

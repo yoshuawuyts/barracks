@@ -42,9 +42,11 @@ callback receives the passed in data and a `wait(actions[, cb])` function that
 can be used to call other actions internally. `wait()` accepts a single action
 or an array of actions and an optional callback as the final argument.
 
-### dispatcher(event[, data])
+### dispatcher(action[, data])
 Call an action and execute the corresponding callback. Alias:
-`dispatcher.emit(event[, data])`.
+`dispatcher.emit(action[, data])`. Supports strings and
+[flux-standard-action](https://github.com/acdlite/flux-standard-action)s
+([example](https://github.com/yoshuawuyts/barracks/blob/master/examples/flux-standard-action.js)).
 
 ## Events
 ### .on('error', cb(err))
@@ -77,7 +79,8 @@ unsure about something.
 ### Can I use flux standard actions with barracks?
 [Yes you can](https://github.com/yoshuawuyts/barracks/blob/master/examples/flux-standard-action.js)
 use [flux standard action](https://github.com/acdlite/flux-standard-action)s
-with `barracks`.
+with `barracks`. Just pass in an FSA compliant object into barracks, and it
+will be parsed correctly.
 
 ### Why didn't you include feature X?
 An action dispatcher doesn't need a lot of features to pass a message from A to

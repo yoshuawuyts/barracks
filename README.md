@@ -95,8 +95,9 @@ cursors / lenses. At the moment of writing I haven't found a data store I'm
 pleased with, so I'll probably end up writing one in the near future.
 
 ## See Also
-- [flux-standard-action](https://github.com/acdlite/flux-standard-action/)
-- [create-fsa](https://github.com/yoshuawuyts/create-fsa/)
+- [flux-standard-action](https://github.com/acdlite/flux-standard-action/) - human-friendly standard for Flux action objects
+- [create-fsa](https://github.com/yoshuawuyts/create-fsa/) - create a flux-standard-action from a value 
+- [wayfarer](https://github.com/yoshuawuyts/wayfarer) - composable trie based router
 
 ## License
 [MIT](https://tldrlegal.com/license/mit-license)

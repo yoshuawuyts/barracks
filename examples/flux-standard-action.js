@@ -1,4 +1,5 @@
-const barracks = require('barracks')
+import createFsa from 'create-fsa'
+import barracks from 'barracks'
 
 // This is an example of how to use
 // `flux-standard-action` with `barracks`.
@@ -11,15 +12,13 @@ const d = barracks()
 
 d.on('foo', (action) => console.log(action.error || action.payload))
 
-d({
-  type: 'foo',
+d(createFsa('foo', {
   payload: { bin: 'baz' }
-})
+}))
 // => {bin: 'baz'}
 
-d({
-  type: 'foo',
+d(createFsa('foo', {
   payload: { bin: 'baz' },
   error: 'oh no, something went wrong!'
-})
+}))
 // => 'oh no, something went wrong!'

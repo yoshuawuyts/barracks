@@ -23,7 +23,7 @@
   "devDependencies": {
     "coveralls": "~2.10.0",
     "istanbul": "~0.2.10",
-    "standard": "^4.5.4",
+    "standard": "^7.1.2",
     "tape": "^3.0.3",
     "watch": "^0.16.0"
   },

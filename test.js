@@ -9,14 +9,25 @@ test('.on() should assert input arguments', function (t) {
 })
 
 test('.on() should bind functions', function (t) {
-  t.plan(3)
+  t.plan(2)
   const d = barracks()
   const key = 'foo'
   d.on(key, noop)
   t.ok(Array.isArray(d._actions[key]), 'is array')
   t.equal(d._actions[key].length, 1)
-  d.on('foo', noop)
-  t.equal(d._actions[key].length, 2)
+})
+
+test('.on() should only bind one function', function (t) {
+  t.plan(4)
+  const d = barracks()
+  const key = 'foo'
+  d.on(key, noop)
+  t.ok(Array.isArray(d._actions[key]), 'is array')
+  t.equal(d._actions[key].length, 1)
+  t.throws(function () {
+    d.on('foo', noop)
+  })
+  t.equal(d._actions[key].length, 1)
 })
 
 test('.emit() should assert action exists', function (t) {

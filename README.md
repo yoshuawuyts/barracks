@@ -40,7 +40,8 @@ Initialize a new `barracks` instance.
 Register a new action. Checks for circular dependencies when dispatching.  The
 callback receives the passed in data and a `wait(actions[, cb])` function that
 can be used to call other actions internally. `wait()` accepts a single action
-or an array of actions and an optional callback as the final argument.
+or an array of actions and an optional callback as the final argument.  Only
+one callback can be added per action.
 
 ### dispatcher(action[, data])
 Call an action and execute the corresponding callback. Alias:
@@ -96,7 +97,7 @@ pleased with, so I'll probably end up writing one in the near future.
 
 ## See Also
 - [flux-standard-action](https://github.com/acdlite/flux-standard-action/) - human-friendly standard for Flux action objects
-- [create-fsa](https://github.com/yoshuawuyts/create-fsa/) - create a flux-standard-action from a value 
+- [create-fsa](https://github.com/yoshuawuyts/create-fsa/) - create a flux-standard-action from a value
 - [wayfarer](https://github.com/yoshuawuyts/wayfarer) - composable trie based router
 
 ## License

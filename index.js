@@ -22,7 +22,7 @@ function dispatcher () {
     assert.equal(typeof cb, 'function')
 
     actions[action] = actions[action] ? actions[action] : []
-    assert.equal(actions[action].length, 0, 'only on callback per action')
+    assert.equal(actions[action].length, 0, 'only one callback per action')
     actions[action].push(cb)
 
     return emit

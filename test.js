@@ -1,175 +1,476 @@
-const test = require('tape')
-const barracks = require('./index.js')
+const barracks = require('./')
+const noop = require('noop2')
+const tape = require('tape')
 
-test('.on() should assert input arguments', function (t) {
-  t.plan(2)
-  const d = barracks()
-  t.throws(d.on.bind(null), /string/)
-  t.throws(d.on.bind(null, ''), /function/)
-})
-
-test('.on() should bind functions', function (t) {
-  t.plan(2)
-  const d = barracks()
-  const key = 'foo'
-  d.on(key, noop)
-  t.ok(Array.isArray(d._actions[key]), 'is array')
-  t.equal(d._actions[key].length, 1)
-})
-
-test('.on() should only bind one function', function (t) {
-  t.plan(4)
-  const d = barracks()
-  const key = 'foo'
-  d.on(key, noop)
-  t.ok(Array.isArray(d._actions[key]), 'is array')
-  t.equal(d._actions[key].length, 1)
-  t.throws(function () {
-    d.on('foo', noop)
+tape('api: store = barracks(handlers)', (t) => {
+  t.test('should validate input types', (t) => {
+    t.plan(3)
+    t.doesNotThrow(barracks, 'no args does not throw')
+    t.doesNotThrow(barracks.bind(null, {}), 'object does not throw')
+    t.throws(barracks.bind(null, 123), 'non-object throws')
   })
-  t.equal(d._actions[key].length, 1)
+
+  t.test('should validate hook types', (t) => {
+    t.plan(3)
+    t.throws(barracks.bind(null, { onError: 123 }), /function/, 'onError throws')
+    t.throws(barracks.bind(null, { onAction: 123 }), /function/, 'onAction throws')
+    t.throws(barracks.bind(null, { onState: 123 }), /function/, 'onState throws')
+  })
 })
 
-test('.emit() should assert action exists', function (t) {
-  t.plan(1)
-  const d = barracks()
-  t.throws(d.bind(null, 'yo'), /action/)
+tape('api: store.model()', (t) => {
+  t.test('should validate input types', (t) => {
+    t.plan(2)
+    const store = barracks()
+    t.throws(store.model.bind(null, 123), /object/, 'non-obj should throw')
+    t.doesNotThrow(store.model.bind(null, {}), 'obj should not throw')
+  })
 })
 
-test('.emit() should call a function', function (t) {
-  t.plan(2)
-  const d = barracks()
-  d.on('foo', function () {
-    t.pass('is called')
+tape('api: createSend = store.start(opts)', (t) => {
+  t.test('should validate input types', (t) => {
+    t.plan(3)
+    const store = barracks()
+    t.throws(store.start.bind(null, 123), /object/, 'non-obj should throw')
+    t.doesNotThrow(store.start.bind(null, {}), /object/, 'obj should not throw')
+    t.doesNotThrow(store.start.bind(null), 'undefined should not throw')
   })
-  d('foo')
-  d.on('bar', function (data) {
-    t.equal(data, 'hello you')
+
+  t.test('opts.noState should not register state', (t) => {
+    t.plan(1)
+    const store = barracks()
+    store.model({ state: { foo: 'bar' } })
+    store.start({ noState: true })
+    const state = store.state()
+    t.deepEqual(state, {}, 'no state returned')
   })
-  d('bar', 'hello you')
+
+  t.test('opts.noEffects should not register effects', (t) => {
+    t.plan(1)
+    const store = barracks()
+    store.model({ effects: { foo: noop } })
+    store.start({ noEffects: true })
+    const effects = Object.keys(store._effects)
+    t.deepEqual(effects.length, 0, 'no effects registered')
+  })
+
+  t.test('opts.noReducers should not register effects', (t) => {
+    t.plan(1)
+    const store = barracks()
+    store.model({ reducers: { foo: noop } })
+    store.start({ noReducers: true })
+    const reducers = Object.keys(store._reducers)
+    t.deepEqual(reducers.length, 0, 'no reducers registered')
+  })
+
+  t.test('opts.noSubscriptions should not register subscriptions', (t) => {
+    t.plan(1)
+    const store = barracks()
+    store.model({ subscriptions: { foo: noop } })
+    store.start({ noSubscriptions: true })
+    const subscriptions = Object.keys(store._subscriptions)
+    t.deepEqual(subscriptions.length, 0, 'no subscriptions registered')
+  })
 })
 
-test('wait() should be able to chain 2 functions', function (t) {
-  t.plan(4)
-  const d = barracks()
-  d.on('foo', function (data, wait) {
-    t.pass('is called')
-    t.equal(typeof wait, 'function')
-    wait('bar')
+tape('api: state = store.state()', (t) => {
+  t.test('should return initial state', (t) => {
+    t.plan(1)
+    const store = barracks()
+    store.model({ state: { foo: 'bar' } })
+    store.start()
+    const state = store.state()
+    t.deepEqual(state, { foo: 'bar' })
   })
-  d.on('bar', function (data) {
-    t.pass('is called')
-    t.equal(data, 'hello me')
+
+  t.test('should return the combined state', (t) => {
+    t.plan(1)
+    const store = barracks()
+    store.model({
+      namespace: 'beep',
+      state: { foo: 'bar', bin: 'baz' }
+    })
+    store.model({
+      namespace: 'boop',
+      state: { foo: 'bar', bin: 'baz' }
+    })
+    store.model({
+      state: { hello: 'dog', welcome: 'world' }
+    })
+    store.start()
+    const state = store.state()
+    const expected = {
+      beep: { foo: 'bar', bin: 'baz' },
+      boop: { foo: 'bar', bin: 'baz' },
+      hello: 'dog',
+      welcome: 'world'
+    }
+    t.deepEqual(expected, state, 'initial state of models is combined')
   })
-  d('foo', 'hello me')
+
+  t.test('object should be frozen by default', (t) => {
+    t.plan(1)
+    const store = barracks()
+    store.model({ state: { foo: 'bar' } })
+    store.start()
+    const state = store.state()
+    state.baz = 'bin'
+    const expected = { foo: 'bar' }
+    t.deepEqual(state, expected, 'state was frozen')
+  })
+
+  t.test('noFreeze should not freeze objects', (t) => {
+    t.plan(1)
+    const store = barracks()
+    store.model({ state: { foo: 'bar' } })
+    store.start()
+    const state = store.state({ noFreeze: true })
+    state.baz = 'bin'
+    const expected = { foo: 'bar', baz: 'bin' }
+    t.deepEqual(state, expected, 'state was not frozen')
+  })
+
+  t.test('passing a state opts should merge state', (t) => {
+    t.plan(1)
+    const store = barracks()
+    store.model({ state: { foo: 'bar' } })
+    store.model({
+      namespace: 'beep',
+      state: { foo: 'bar', bin: 'baz' }
+    })
+    store.start()
+
+    const extendedState = {
+      woof: 'dog',
+      beep: { foo: 'baz' },
+      barp: { bli: 'bla' }
+    }
+    const state = store.state({ state: extendedState })
+    const expected = {
+      foo: 'bar',
+      woof: 'dog',
+      beep: { foo: 'baz', bin: 'baz' },
+      barp: { bli: 'bla' }
+    }
+    t.deepEqual(state, expected, 'state was merged')
+  })
 })
 
-test('wait should be able to chain 4 functions', function (t) {
-  t.plan(10)
-  const d = barracks()
-  d.on('foo', function (data, wait) {
-    t.pass('is called')
-    return wait(['bar', 'bin', 'baz'])
+tape('api: send(name, data?)', (t) => {
+  t.test('should validate input types', (t) => {
+    t.plan(1)
+    const store = barracks()
+    const createSend = store.start()
+    const send = createSend('test')
+    t.throws(send.bind(null, 123), /string/, 'non-string should throw')
   })
-  d.on('bar', cbFn)
-  d.on('bin', cbFn)
-  d.on('baz', cbFn)
-  d('foo', 'hello me')
-  function cbFn (data, wait) {
-    t.pass('is called')
-    t.equal(data, 'hello me')
-    t.equal(typeof wait, 'function')
-    wait()
-  }
 })
 
-test('wait() should call a callback on end', function (t) {
-  t.plan(2)
-  const d = barracks()
-  var i = 0
-  d.on('foo', function (data, wait) {
-    return wait('bar', function () {
-      t.equal(i, 1)
+tape('handlers: reducers', (t) => {
+  t.test('should be able to be called', (t) => {
+    t.plan(6)
+    const store = barracks()
+    store.model({
+      namespace: 'meow',
+      state: { beep: 'boop' },
+      reducers: {
+        woof: (action, state) => t.pass('meow.woof called')
+      }
+    })
+
+    store.model({
+      state: {
+        foo: 'bar',
+        beep: 'boop'
+      },
+      reducers: {
+        foo: (action, state) => {
+          t.deepEqual(action, { foo: 'baz' }, 'action is equal')
+          t.equal(state.foo, 'bar', 'state.foo = bar')
+          return { foo: 'baz' }
+        },
+        sup: (action, state) => {
+          t.equal(action, 'nope', 'action is equal')
+          t.equal(state.beep, 'boop', 'state.beep = boop')
+          return { beep: 'nope' }
+        }
+      }
+    })
+    const createSend = store.start()
+    const send = createSend('tester', true)
+    send('foo', { foo: 'baz' })
+    send('sup', 'nope')
+    send('meow:woof')
+    process.nextTick(function () {
+      const state = store.state()
+      const expected = {
+        foo: 'baz',
+        beep: 'nope',
+        meow: { beep: 'boop' }
+      }
+      t.deepEqual(state, expected, 'state was updated')
     })
   })
-  d.on('bar', function (data) {
-    t.pass('is called')
-    i++
-  })
-  d('foo', 'hello me')
 })
 
-test('wait() should be able to call functions 4 levels deep', function (t) {
-  t.plan(16)
-  const d = barracks()
-  var n = 0
-  d.on('foo', function (data, wait) {
-    t.pass('is called')
-    t.equal(data, 'hello me')
-    t.equal(typeof wait, 'function')
-    t.equal(n++, 0)
-    return wait('bar')
+tape('handlers: effects', (t) => {
+  t.test('should be able to be called', (t) => {
+    t.plan(5)
+    const store = barracks()
+
+    store.model({
+      namespace: 'meow',
+      effects: {
+        woof: (action, state, send, done) => {
+          t.pass('woof called')
+        }
+      }
+    })
+
+    store.model({
+      state: { bin: 'baz', beep: 'boop' },
+      reducers: {
+        bar: (action, state) => {
+          t.pass('reducer was called')
+          return { beep: action.beep }
+        }
+      },
+      effects: {
+        foo: (action, state, send, done) => {
+          t.pass('effect was called')
+          send('bar', { beep: action.beep }, () => {
+            t.pass('effect callback was called')
+            done()
+          })
+        }
+      }
+    })
+    const createSend = store.start()
+    const send = createSend('tester', true)
+    send('foo', { beep: 'woof' })
+    send('meow:woof')
+
+    process.nextTick(function () {
+      process.nextTick(function () {
+        const state = store.state()
+        const expected = { bin: 'baz', beep: 'woof' }
+        t.deepEqual(state, expected, 'state was updated')
+      })
+    })
   })
-  d.on('bar', function (data, wait) {
-    t.pass('is called')
-    t.equal(data, 'hello me')
-    t.equal(typeof wait, 'function')
-    t.equal(n++, 1)
-    return wait('bin')
+
+  t.test('should be able to nest effects and return data', (t) => {
+    t.plan(12)
+    const store = barracks()
+    store.model({
+      effects: {
+        foo: (action, state, send, done) => {
+          t.pass('foo was called')
+          send('bar', { beep: 'boop' }, () => {
+            t.pass('foo:bar effect callback was called')
+            send('baz', (err, res) => {
+              t.ifError(err, 'no error')
+              t.equal(res, 'yay', 'res is equal')
+              t.pass('foo:baz effect callback was called')
+              done()
+            })
+          })
+        },
+        bar: (action, state, send, done) => {
+          t.pass('bar was called')
+          t.deepEqual(action, { beep: 'boop' }, 'action is equal')
+          send('baz', (err, res) => {
+            t.ifError(err, 'no error')
+            t.equal(res, 'yay', 'res is equal')
+            t.pass('bar:baz effect callback was called')
+            done()
+          })
+        },
+        baz: (action, state, send, done) => {
+          t.pass('baz effect was called')
+          done(null, 'yay')
+        }
+      }
+    })
+    const createSend = store.start()
+    const send = createSend('tester', true)
+    send('foo')
   })
-  d.on('bin', function (data, wait) {
-    t.pass('is called')
-    t.equal(data, 'hello me')
-    t.equal(typeof wait, 'function')
-    t.equal(n++, 2)
-    return wait('bon')
+
+  t.test('should be able to propagate nested errors', (t) => {
+    t.plan(7)
+    const store = barracks()
+    store.model({
+      effects: {
+        foo: (action, state, send, done) => {
+          t.pass('foo was called')
+          send('bar', (err, res) => {
+            t.ok(err, 'error detected')
+            t.pass('foo:bar effect callback was called')
+            done()
+          })
+        },
+        bar: (action, state, send, done) => {
+          t.pass('bar was called')
+          send('baz', (err, res) => {
+            t.ok(err, 'error detected')
+            t.pass('bar:baz effect callback was called')
+            done(err)
+          })
+        },
+        baz: (action, state, send, done) => {
+          t.pass('baz effect was called')
+          done(new Error('oh noooo'))
+        }
+      }
+    })
+    const createSend = store.start()
+    const send = createSend('tester', true)
+    send('foo')
   })
-  d.on('bon', function (data, wait) {
-    t.pass('is called')
-    t.equal(data, 'hello me')
-    t.equal(typeof wait, 'function')
-    t.equal(n++, 3)
-  })
-  d('foo', 'hello me')
 })
 
-test('.emit() should emit `error` on circular dependencies', function (t) {
-  t.plan(1)
-  const d = barracks()
-  d.on('bin', function (data, wait) {
-    return wait('bar')
+tape('handlers: subscriptions', (t) => {
+  t.test('should be able to call', (t) => {
+    t.plan(9)
+    const store = barracks()
+    store.model({
+      namespace: 'foo',
+      subscriptions: {
+        mySub: (send, done) => {
+          t.pass('namespaced sub initiated')
+        }
+      }
+    })
+
+    store.model({
+      reducers: {
+        bar: () => t.pass('reducer called')
+      },
+      effects: {
+        foo: (action, state, send, done) => {
+          t.pass('foo was called')
+          done(new Error('oh no!'), 'hello')
+        }
+      },
+      subscriptions: {
+        mySub: (send, done) => {
+          t.pass('mySub was initiated')
+          send('foo', (err, res) => {
+            t.ok(err, 'error detected')
+            t.equal(res, 'hello', 'res was passed')
+            t.pass('mySub:foo effect callback was called')
+            send('bar', (err, res) => {
+              t.error(err, 'no error detected')
+              t.pass('mySub:bar effect callback was called')
+            })
+          })
+        }
+      }
+    })
+    store.start()
   })
-  d.on('bar', function (data, wait) {
-    return wait('bin')
+
+  t.test('should be able to emit an error', (t) => {
+    t.plan(2)
+    const store = barracks({
+      onError: (err) => t.equal(err.message, 'oh no!', 'err was received')
+    })
+
+    store.model({
+      subscriptions: {
+        mySub: (send, done) => {
+          t.pass('sub initiated')
+          done(new Error('oh no!'))
+        }
+      }
+    })
+    store.start()
   })
-  d.on('error', function (err) {
-    t.equal(err, 'circular dependency detected')
-  })
-  d('bin')
 })
 
-test('.emit() should throw if no error handler is bound', function (t) {
-  t.plan(1)
-  const d = barracks()
-  d.on('bin', function (data, wait) {
-    return wait('bar')
+tape('hooks: onState', (t) => {
+  t.test('should be called whenever state changes', (t) => {
+    t.plan(4)
+    const store = barracks({
+      onState: (action, state, prev, caller, createSend) => {
+        t.deepEqual(action, { count: 3 }, 'action is equal')
+        t.deepEqual(state, { count: 4 }, 'state is equal')
+        t.deepEqual(prev, { count: 1 }, 'prev is equal')
+        t.equal(caller, 'increment', 'caller is equal')
+      }
+    })
+
+    store.model({
+      state: { count: 1 },
+      reducers: {
+        increment: (action, state) => ({ count: state.count + action.count })
+      }
+    })
+
+    const createSend = store.start()
+    const send = createSend('test', true)
+    send('increment', { count: 3 })
   })
-  d.on('bar', function (data, wait) {
-    return wait('bin')
+
+  t.test('should allow triggering other actions', (t) => {
+    t.plan(2)
+    const store = barracks({
+      onState: function (action, state, prev, caller, createSend) {
+        t.pass('onState called')
+        const send = createSend('test:onState', true)
+        send('foo')
+      }
+    })
+
+    store.model({
+      state: { count: 1 },
+      effects: {
+        foo: (action, state, send, done) => {
+          t.pass('called')
+          done()
+        }
+      },
+      reducers: {
+        increment: (action, state) => ({ count: state.count + action.count })
+      }
+    })
+
+    const createSend = store.start()
+    const send = createSend('test', true)
+    send('increment', { count: 3 })
   })
-  t.throws(d.bind(null, 'bin'), /unhandled 'error' event/)
 })
 
-test('.emit() should be able to handle flux standard actions', function (t) {
-  t.plan(2)
-  const d = barracks()
+tape('hooks: onAction', (t) => {
+  t.test('should be called whenever an action is emitted', (t) => {
+    t.plan(5)
+    const store = barracks({
+      onAction: (action, state, actionName, caller, createSend) => {
+        t.deepEqual(action, { count: 3 }, 'action is equal')
+        t.deepEqual(state, { count: 1 }, 'state is equal')
+        t.deepEqual(actionName, 'foo', 'actionName is equal')
+        t.equal(caller, 'test', 'caller is equal')
+      }
+    })
 
-  d.on('foo', function (data) {
-    t.equal(data.type, 'foo')
-    t.equal(data.payload, 'bar')
+    store.model({
+      state: { count: 1 },
+      effects: {
+        foo: (action, state, send, done) => {
+          t.pass('effect called')
+          done()
+        }
+      }
+    })
+
+    const createSend = store.start()
+    const send = createSend('test', true)
+    send('foo', { count: 3 })
   })
-  d({ type: 'foo', payload: 'bar' })
 })
 
-function noop () {}
-noop()
+tape('hooks: onError', (t) => {
+  t.test('should have a default err handler')
+  t.test('should not call itself')
+})

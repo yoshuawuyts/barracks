@@ -4,60 +4,268 @@
 [![Test coverage][coveralls-image]][coveralls-url]
 [![Downloads][downloads-image]][downloads-url]
 
-Action dispatcher for unidirectional data flows. Provides action composition
-and checks for circular dependencies with a small interface of only 3
-functions.
-
-## Installation
-```sh
-$ npm install barracks
-```
+Action dispatcher for unidirectional data flows. Creates tiny models of data
+that can be accessed through actions with an API of only 5 functions
 
 ## Usage
 ````js
 const barracks = require('barracks')
 
-const dispatcher = barracks()
-const store = []
-
-dispatcher.on('error', err => console.log(err))
-dispatcher.on('insert', data => store.push(data.name))
-dispatcher.on('upsert', (data, wait) => {
-  const index = store.indexOf(data.newName)
-  if (index !== -1) return wait('insert')
-  store[index] = data.newName
+const store = barracks({
+  onError: (err, state, createSend) => {
+    console.error(`error: ${err}`)
+  }),
+  onAction: (action, state, name, caller, createSend) => {
+    console.log(`action: ${action}`)
+  })
+  onState: (action, state, prev, caller, createSend) => {
+    console.log(`state: ${prev} -> ${state}`)
+  })
 })
 
-dispatcher('insert', {name: 'Loki'})
-dispatcher('upsert', {name: 'Loki', newName: 'Tobi'})
+store.model({
+  namespace: 'cakes',
+  state: {},
+  effects: {},
+  reducers: {},
+  subscriptions: {}
+})
+
+const createSend = store.start({ noSubscriptions: true })
+const send = createSend('myDispatcher', true)
+document.addEventListener('DOMContentLoaded', () => {
+  store.start()
+  const state = store.state()
+  send('foo:start', { name: 'Loki' })
+})
 ````
 
 ## API
-### dispatcher = barracks()
-Initialize a new `barracks` instance.
+### store = barracks(handlers)
+Initialize a new `barracks` instance. Takes an optional object of handlers.
+Handlers can be:
+- __onError(err, state, createSend):__ called when an `effect` or
+  `subscription` emit an error. If no handler is passed, the default handler
+  will `throw` on each error.
+- __onAction(action, state, name, caller, createSend):__ called when an
+  `action` is fired.
+- __onState(action, state, prev, caller, createSend):__ called after a reducer
+  changes the `state`.
 
-### dispatcher.on(action, cb(data, wait))
-Register a new action. Checks for circular dependencies when dispatching.  The
-callback receives the passed in data and a `wait(actions[, cb])` function that
-can be used to call other actions internally. `wait()` accepts a single action
-or an array of actions and an optional callback as the final argument.  Only
-one callback can be added per action.
+`createSend()` is a special function that allows the creation of a new named
+`send()` function. The first argument should be a string which is the name, the
+second argument is a boolean `callOnError` which can be set to `true` to call
+the `onError` hook istead of a provided callback. It then returns a
+`send(actionName, data?)` function.
 
-### dispatcher(action[, data])
-Call an action and execute the corresponding callback. Alias:
-`dispatcher.emit(action[, data])`. Supports strings and
-[flux-standard-action](https://github.com/acdlite/flux-standard-action)s
-([example](https://github.com/yoshuawuyts/barracks/blob/master/examples/flux-standard-action.js)).
+Handlers should be used with care, as they're the most powerful interface into
+the state. For application level code it's generally recommended to delegate to
+actions inside models using the `send()` call, and only shape the actions
+inside the handlers.
 
-## Events
-### .on('error', cb(err))
-Handle errors. Warns if circular dependencies exists.
+### store.model()
+Register a new model on the store. Models are optionally namespaced objects
+with an initial `state`, and handlers for dealing with data:
+- __namespace:__ namespace the model so that it cannot access any properties
+  and handlers in other models
+- __state:__ initial values of `state` inside the model
+- __reducers:__ synchronous operations that modify state. Triggered by `actions`
+- __effects:__ asynchronous operations that don't modify state directly.
+  Triggered by `actions`, can call `actions`
+- __subscriptions:__ asynchronous read-only operations that don't modify state
+  directly. Can call `actions`
+
+`state` within handlers is immutable through `Object.freeze()` and thus cannot
+be modified. Return data from `reducers` to modify `state`. See [handler
+signatures](#handler-signatures) for more info on the handlers.
+
+For debugging purposes internal references to values can be inspected through a
+series of private accessors:
+- `store._subscriptions`
+- `store._reducers`
+- `store._effects`
+- `store._models`
+
+### state = store.state(opts)
+Get the current state from the store. Opts can take the following values:
+- __noFreeze:__ default: false. Don't freeze returned state using
+  `Object.freeze()`. Useful for optimizing performance in production builds.
+- __state:__ pass in a state object that will be merged with the state returned
+  from the store. Useful for rendering in Node.
+
+### send = createSend(name) = store.start(opts)
+Start the store and get a `createSend(name)` function. Pass a unique `name` to
+`createSend()` to get a `send()` function. Opts can take the following values:
+- __noSubscriptions:__ default: false. Don't register `subscriptions` when
+  starting the application. Useful to delay `init` functions until the DOM has
+  loaded.
+- __noEffects:__ default: false. Don't register `effects` when
+  starting the application. Useful when only wanting the initial `state`
+- __noReducers:__ default: false. Don't register `reducers` when
+  starting the application. Useful when only wanting the initial `state`
+- __noFreeze:__ default: false. Don't freeze state in handlers using
+  `Object.freeze()`. Useful for optimizing performance in production builds.
+
+### send(name, data?)
+Send a new action to the models with optional data attached. Namespaced models
+can be accessed by prefixing the name with the namespace separated with a `:`,
+e.g. `namespace:name`.
+
+## Handler signatures
+These are the signatures for the properties that can be passed into a model.
+
+### namespace
+An optional string that causes `state`, `effects` and `reducers` to be
+prefixed.
+
+```js
+app.model({
+  namespace: 'users'
+})
+```
+
+### state
+State can either be a value or an object of values that is used as the initial
+state for the application. If namespaced the values will live under
+`state[namespace]`.
+```js
+app.model({
+  namespace: 'hey',
+  state: { foo: 'bar' }
+})
+app.model({
+  namespace: 'there',
+  state: { bin: [ 'beep', 'boop' ] }
+})
+app.model({
+  namespace: 'people',
+  state: 'oi'
+}})
+```
+
+### reducers
+Reducers are synchronous functions that return a value syncrhonously. No
+eventual values, just values that are relevant for the state. It takes two
+arguments of `action` and `state`. `action` is the data that was emitted, and
+`state` is the current state. Each action has a name that can be accessed
+through `send(name)`, and when under a namespace can be accessed as
+`send(namespace:name)`. When operating under a namespace, reducers only have
+access to the state within the namespace.
+```js
+// some model
+app.model({
+  namespace: 'plantcake',
+  state: {
+    enums: [ 'veggie', 'potato', 'lettuce' ]
+    paddie: 'veggie'
+  }
+})
+
+// so this model can't access anything in the 'plantcake' namespace
+app.model({
+  namespace: 'burlybeardos',
+  state: { count: 1 },
+  reducers: {
+    feedPlantcake: (action, state) => {
+      return { count: state.count + 1 }
+    },
+    trimBeard: (action, state) => ({ count: state.count - 1 })
+  }
+})
+```
+
+### effects
+`effects` are asynchronous methods that can be triggered by `actions` in
+`send()`. They never update the state directly, but can instead do thing
+asyncrhonously, and then call `send()` again to trigger a `reducer` that can
+update the state. `effects` can also trigger other `effects`, making them fully
+composable. Generalyy it's recommended to only have `effects` without a
+`namespace` call other `effects`, as to keep namespaced models as isolated as
+possible.
+
+When an `effect` is done executing, or encounters an error, it should call the
+final `done(err)` callback. If the `effect` was called by another `effect` it
+will call the callback of the caller. When an error propegates all the way to
+the top, the `onError` handler will be called, registered in
+`barracks(handlers)`. If no callback is registered, errors will `throw`.
+
+Having callbacks in `effects` means that error handling can be formalized
+without knowledge of the rest of the application leaking into the model. This
+also causes `effects` to become fully composable, which smooths parallel
+development in large teams, and keeps the mental overhead low when developing a
+single model.
+
+```js
+const http = require('xhr')
+const app = barracks({
+  onError: (action, state, prev, send) => send('app:error', action)
+})
+
+app.model({
+  namespace: 'app',
+  effects: {
+    error: (action, state, send, done) => {
+      // if doing http calls here be super sure not to get lost
+      // in a recursive error handling loop: remember this IS
+      // the error handler
+      console.error(action.message)
+      done()
+    }
+  }
+})
+
+app.model({
+  namespace: 'foo',
+  state: { foo: 1 },
+  reducers: {
+    moreFoo: (action, state) => ({ foo: state.foo + action.count })
+  }
+  effects: {
+    fetch: (action, state, send, done) => {
+      http('foobar.com', function (err, res, body) {
+        if (err || res.statusCode !== 200) {
+          return done(new Error({
+            message: 'error accessing server',
+            error: err
+          }))
+        } else {
+          send('moreFoo', { count: foo.count })
+          done()
+        }
+      })
+    }
+  }
+})
+```
+
+### subscriptions
+`subscriptions` are read-only sources of data. This means they cannot be
+triggered by actions, but can emit actions themselves whenever they want. This
+is useful for stuff like listening to keyboard events or incoming websocket
+data. They should generally be started when the application is loaded, using
+the `DOMContentLoaded` listener.
+
+```js
+app.model({
+  subscriptions: {
+    emitWoofs: (send, done) => {
+      // emit a woof every second
+      setInterval(() =>  send('print', { woof: 'meow?' }), 1000)
+    }
+  },
+  effects: {
+    printWoofs: (action, state) => console.log(action.woof)
+  }
+})
+```
+`done()` is passed as the final argument so if an error occurs in a subscriber,
+it can be communicated to the `onError` hook.
 
 ## FAQ
 ### What is an "action dispatcher"?
 An action dispatcher gets data from one place to another without tightly
-coupling the code. The best known use case for this is in the `flux` pattern.
-Say you want to update a piece of data (for example a user's name), instead of
+coupling code. The best known use case for this is in the `flux` pattern.  Say
+you want to update a piece of data (for example a user's name), instead of
 directly calling the update logic inside the view the action calls a function
 that updates the user's name for you. Now all the views that need to update a
 user's name can call the same action and pass in the relevant data.  This
@@ -65,40 +273,37 @@ pattern tends to make views more robust and easier to maintain.
 
 ### Why did you build this?
 Passing messages around should not be complicated. Many `flux` implementations
-casually throw around framework specific terminology making new users feel
-silly for not following along. I don't like that. `barracks` is a package that
-takes node's familiar `EventEmitter` interface and adapts it for use as an
-action dispatcher.
+casually throw restrictions at users without having a clear architecture. I
+don't like that. `barracks` is a package creates a clear flow of data within an
+application, concerning itself with state, code separation, and data flow. I
+believe that having strong opinions and being transparant in them makes for
+architectures than sprinkles of opinions left and right, without a cohesive
+story as to _why_.
 
-### I want to use barracks, but I'm not sure where to start
-That's fine, but it also means this readme needs to be improved. Would you mind
-opening an [issue](https://github.com/yoshuawuyts/barracks/issues) and explain
-what you're having difficulty with? I want `barracks` to be comprehensive for
-developers of any skill level, so don't hesitate to ask questions if you're
-unsure about something.
+### How is this different from choo?
+`choo` is a framework that handles views, data and all problems related to
+that. This is a package that only concerns itself with data flow, without being
+explicitely tied to the DOM.
 
-### Can I use flux standard actions with barracks?
-[Yes you can](https://github.com/yoshuawuyts/barracks/blob/master/examples/flux-standard-action.js)
-use [flux standard action](https://github.com/acdlite/flux-standard-action)s
-with `barracks`. Just pass in an FSA compliant object into barracks, and it
-will be parsed correctly.
-
-### Why didn't you include feature X?
-An action dispatcher doesn't need a lot of features to pass a message from A to
-B. `barracks` was built for flexibility. If you feel you're repeating yourself
-a lot with `barracks` or are missing a feature, feel free to wrap and extend it
-however you like.
-
-### What data store do you recommend using with barracks?
-In flux it's common to store your application state in a data store. I think a
-data store should be immutable, single-instance and allow data access through
-cursors / lenses. At the moment of writing I haven't found a data store I'm
-pleased with, so I'll probably end up writing one in the near future.
+### This looks like more than five functions!
+Welllll, no. It's technically five functions with a high arity, hah. Nah,
+you're right - but five functions _sounds_ good. Besides: you don't need to
+know all options and toggles to get this working; that only relevant once you
+start hitting edge cases like we did in `choo` :sparkles:
 
 ## See Also
-- [flux-standard-action](https://github.com/acdlite/flux-standard-action/) - human-friendly standard for Flux action objects
-- [create-fsa](https://github.com/yoshuawuyts/create-fsa/) - create a flux-standard-action from a value
-- [wayfarer](https://github.com/yoshuawuyts/wayfarer) - composable trie based router
+- [choo](https://github.com/yoshuawuyts/choo) - sturdy frontend framework
+- [sheet-router](https://github.com/yoshuawuyts/wayfarer) - fast, modular
+  client-side router
+- [yo-yo](https://github.com/maxogden/yo-yo) - template string based view
+  framework
+- [send-action](https://github.com/sethdvincent/send-action) - unidirectional
+  action emitter
+
+## Installation
+```sh
+$ npm install barracks
+```
 
 ## License
 [MIT](https://tldrlegal.com/license/mit-license)

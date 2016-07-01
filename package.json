@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "standard && NODE_ENV=test node test",
-    "test-cov": "standard && NODE_ENV=test istanbul cover test.js",
+    "test:cov": "standard && NODE_ENV=test istanbul cover test.js",
     "watch": "watch 'npm t'"
   },
   "repository": "yoshuawuyts/barracks",
@@ -21,16 +21,23 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "bundle-collapser": "^1.2.1",
     "coveralls": "~2.10.0",
+    "es2020": "^1.1.6",
     "istanbul": "~0.2.10",
+    "noop2": "^2.0.0",
     "standard": "^7.1.2",
     "tape": "^3.0.3",
+    "uglifyify": "^3.0.2",
+    "unassertify": "^2.0.3",
     "watch": "^0.16.0"
   },
   "dependencies": {
     "debug": "^2.0.0",
     "flux-standard-action": "^0.6.0",
-    "run-series": "^1.1.2"
+    "noop2": "^2.0.0",
+    "run-series": "^1.1.2",
+    "xtend": "^4.0.1"
   },
   "files": [
     "LICENSE",

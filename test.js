@@ -201,7 +201,7 @@ tape('handlers: reducers', (t) => {
     send('foo', { foo: 'baz' })
     send('sup', 'nope')
     send('meow:woof')
-    process.nextTick(function () {
+    setTimeout(function () {
       const state = store.state()
       const expected = {
         foo: 'baz',
@@ -209,7 +209,7 @@ tape('handlers: reducers', (t) => {
         meow: { beep: 'boop' }
       }
       t.deepEqual(state, expected, 'state was updated')
-    })
+    }, 10)
   })
 })
 
@@ -250,13 +250,11 @@ tape('handlers: effects', (t) => {
     send('foo', { beep: 'woof' })
     send('meow:woof')
 
-    process.nextTick(function () {
-      process.nextTick(function () {
-        const state = store.state()
-        const expected = { bin: 'baz', beep: 'woof' }
-        t.deepEqual(state, expected, 'state was updated')
-      })
-    })
+    setTimeout(function () {
+      const state = store.state()
+      const expected = { bin: 'baz', beep: 'woof' }
+      t.deepEqual(state, expected, 'state was updated')
+    }, 10)
   })
 
   t.test('should be able to nest effects and return data', (t) => {

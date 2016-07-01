@@ -138,7 +138,7 @@ function dispatcher (handlers) {
       assert.equal(typeof caller, 'string', 'barracks._send: caller should be a string')
       assert.equal(typeof cb, 'function', 'barracks._send: cb should be a function')
 
-      process.nextTick(function () {
+      setTimeout(function () {
         var reducersCalled = false
         var effectsCalled = false
         const newState = xtend(_state)
@@ -178,7 +178,7 @@ function dispatcher (handlers) {
         if (!reducersCalled && !effectsCalled) {
           throw new Error('Could not find action ' + actionName)
         }
-      })
+      }, 0)
     }
   }
 }

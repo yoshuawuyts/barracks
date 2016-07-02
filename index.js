@@ -205,5 +205,5 @@ function apply (ns, source, target, createSend, done) {
 // handle errors all the way at the top of the trace
 // err? -> null
 function defaultOnError (err) {
-  throw err
+  if (err) throw err
 }

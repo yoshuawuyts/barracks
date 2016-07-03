@@ -1,6 +1,6 @@
 {
   "name": "barracks",
-  "version": "7.0.4",
+  "version": "7.0.5",
   "description": "Action dispatcher for unidirectional data flows",
   "main": "index.js",
   "scripts": {

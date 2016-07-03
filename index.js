@@ -10,11 +10,11 @@ function dispatcher (handlers) {
   handlers = handlers || {}
   assert.equal(typeof handlers, 'object', 'barracks: handlers should be undefined or an object')
 
-  const onError = handlers.onError || defaultOnError
+  const onError = wrapOnError(handlers.onError || defaultOnError)
   const onAction = handlers.onAction
   const onState = handlers.onState
 
-  assert.equal(typeof onError, 'function', 'barracks: onError should be a function')
+  assert.ok(!handlers.onError || typeof handlers.onError === 'function', 'barracks: onError should be undefined or a function')
   assert.ok(!onAction || typeof onAction === 'function', 'barracks: onAction should be undefined or a function')
   assert.ok(!onState || typeof onState === 'function', 'barracks: onState should be undefined or a function')
 
@@ -205,5 +205,11 @@ function apply (ns, source, target, createSend, done) {
 // handle errors all the way at the top of the trace
 // err? -> null
 function defaultOnError (err) {
-  if (err) throw err
+  throw err
+}
+
+function wrapOnError (onError) {
+  return function onErrorWrap (err) {
+    if (err) onError(err)
+  }
 }

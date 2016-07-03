@@ -93,7 +93,7 @@ function dispatcher (handlers) {
     if (!opts.noState) stateCalled = true
     if (!opts.noReducers) reducersCalled = true
     if (!opts.noEffects) effectsCalled = true
-    if (!opts.noSubs) subsCalled = true
+    if (!opts.noSubscriptions) subsCalled = true
 
     return createSend
 

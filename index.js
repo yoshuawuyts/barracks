@@ -12,11 +12,11 @@ function dispatcher (handlers) {
 
   const onError = wrapOnError(handlers.onError || defaultOnError)
   const onAction = handlers.onAction
-  const onState = handlers.onState
+  const onStateChange = handlers.onStateChange
 
   assert.ok(!handlers.onError || typeof handlers.onError === 'function', 'barracks: onError should be undefined or a function')
   assert.ok(!onAction || typeof onAction === 'function', 'barracks: onAction should be undefined or a function')
-  assert.ok(!onState || typeof onState === 'function', 'barracks: onState should be undefined or a function')
+  assert.ok(!onStateChange || typeof onStateChange === 'function', 'barracks: onStateChange should be undefined or a function')
 
   var reducersCalled = false
   var effectsCalled = false
@@ -162,7 +162,7 @@ function dispatcher (handlers) {
             mutate(newState, reducers[actionName](data, _state))
           }
           reducersCalled = true
-          if (onState) onState(data, newState, _state, actionName, createSend)
+          if (onStateChange) onStateChange(data, newState, _state, actionName, createSend)
           _state = newState
           cb()
         }

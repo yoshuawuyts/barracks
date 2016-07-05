@@ -253,7 +253,7 @@ app.model({
   subscriptions: {
     emitWoofs: (send, done) => {
       // emit a woof every second
-      setInterval(() =>  send('print', { woof: 'meow?' }, done), 1000)
+      setInterval(() =>  send('printWoofs', { woof: 'meow?' }, done), 1000)
     }
   },
   effects: {

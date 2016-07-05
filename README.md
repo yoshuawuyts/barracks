@@ -88,23 +88,22 @@ series of private accessors:
 
 ### state = store.state(opts)
 Get the current state from the store. Opts can take the following values:
-- __noFreeze:__ default: false. Don't freeze returned state using
-  `Object.freeze()`. Useful for optimizing performance in production builds.
+- __freeze:__ default: true. Set to false to not freeze state in handlers
+  using `Object.freeze()`. Useful for optimizing performance in production
+  builds.
 - __state:__ pass in a state object that will be merged with the state returned
   from the store. Useful for rendering in Node.
 
 ### send = createSend(name) = store.start(opts)
 Start the store and get a `createSend(name)` function. Pass a unique `name` to
 `createSend()` to get a `send()` function. Opts can take the following values:
-- __noSubscriptions:__ default: false. Don't register `subscriptions` when
-  starting the application. Useful to delay `init` functions until the DOM has
-  loaded.
-- __noEffects:__ default: false. Don't register `effects` when
+- __subscriptions:__ default: true. Set to false to not register
+  `subscriptions` when starting the application. Useful to delay `init`
+  functions until the DOM has loaded.
+- __effects:__ default: true. Set to `false` to not register `effects` when
   starting the application. Useful when only wanting the initial `state`
-- __noReducers:__ default: false. Don't register `reducers` when
+- __reducers:__ default: true. Set to false to not register `reducers` when
   starting the application. Useful when only wanting the initial `state`
-- __noFreeze:__ default: false. Don't freeze state in handlers using
-  `Object.freeze()`. Useful for optimizing performance in production builds.
 
 ### send(name, data?)
 Send a new action to the models with optional data attached. Namespaced models

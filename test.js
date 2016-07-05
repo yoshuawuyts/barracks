@@ -36,38 +36,38 @@ tape('api: createSend = store.start(opts)', (t) => {
     t.doesNotThrow(store.start.bind(null), 'undefined should not throw')
   })
 
-  t.test('opts.noState should not register state', (t) => {
+  t.test('opts.state = false should not register state', (t) => {
     t.plan(1)
     const store = barracks()
     store.model({ state: { foo: 'bar' } })
-    store.start({ noState: true })
+    store.start({ state: false })
     const state = store.state()
     t.deepEqual(state, {}, 'no state returned')
   })
 
-  t.test('opts.noEffects should not register effects', (t) => {
+  t.test('opts.effects = false should not register effects', (t) => {
     t.plan(1)
     const store = barracks()
     store.model({ effects: { foo: noop } })
-    store.start({ noEffects: true })
+    store.start({ effects: false })
     const effects = Object.keys(store._effects)
     t.deepEqual(effects.length, 0, 'no effects registered')
   })
 
-  t.test('opts.noReducers should not register effects', (t) => {
+  t.test('opts.reducers = false should not register reducers', (t) => {
     t.plan(1)
     const store = barracks()
     store.model({ reducers: { foo: noop } })
-    store.start({ noReducers: true })
+    store.start({ reducers: false })
     const reducers = Object.keys(store._reducers)
     t.deepEqual(reducers.length, 0, 'no reducers registered')
   })
 
-  t.test('opts.noSubscriptions should not register subscriptions', (t) => {
+  t.test('opts.subscriptions = false should not register subs', (t) => {
     t.plan(1)
     const store = barracks()
     store.model({ subscriptions: { foo: noop } })
-    store.start({ noSubscriptions: true })
+    store.start({ subscriptions: false })
     const subscriptions = Object.keys(store._subscriptions)
     t.deepEqual(subscriptions.length, 0, 'no subscriptions registered')
   })
@@ -119,12 +119,12 @@ tape('api: state = store.state()', (t) => {
     t.deepEqual(state, expected, 'state was frozen')
   })
 
-  t.test('noFreeze should not freeze objects', (t) => {
+  t.test('freeze = false should not freeze objects', (t) => {
     t.plan(1)
     const store = barracks()
     store.model({ state: { foo: 'bar' } })
     store.start()
-    const state = store.state({ noFreeze: true })
+    const state = store.state({ freeze: false })
     state.baz = 'bin'
     const expected = { foo: 'bar', baz: 'bin' }
     t.deepEqual(state, expected, 'state was not frozen')

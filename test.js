@@ -14,7 +14,7 @@ tape('api: store = barracks(handlers)', (t) => {
     t.plan(3)
     t.throws(barracks.bind(null, { onError: 123 }), /function/, 'onError throws')
     t.throws(barracks.bind(null, { onAction: 123 }), /function/, 'onAction throws')
-    t.throws(barracks.bind(null, { onState: 123 }), /function/, 'onState throws')
+    t.throws(barracks.bind(null, { onStateChange: 123 }), /function/, 'onStateChange throws')
   })
 })
 
@@ -387,11 +387,11 @@ tape('handlers: subscriptions', (t) => {
   })
 })
 
-tape('hooks: onState', (t) => {
+tape('hooks: onStateChange', (t) => {
   t.test('should be called whenever state changes', (t) => {
     t.plan(4)
     const store = barracks({
-      onState: (action, state, prev, caller, createSend) => {
+      onStateChange: (action, state, prev, caller, createSend) => {
         t.deepEqual(action, { count: 3 }, 'action is equal')
         t.deepEqual(state, { count: 4 }, 'state is equal')
         t.deepEqual(prev, { count: 1 }, 'prev is equal')
@@ -414,9 +414,9 @@ tape('hooks: onState', (t) => {
   t.test('should allow triggering other actions', (t) => {
     t.plan(2)
     const store = barracks({
-      onState: function (action, state, prev, caller, createSend) {
-        t.pass('onState called')
-        const send = createSend('test:onState', true)
+      onStateChange: function (action, state, prev, caller, createSend) {
+        t.pass('onStateChange called')
+        const send = createSend('test:onStateChange', true)
         send('foo')
       }
     })

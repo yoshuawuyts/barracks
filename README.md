@@ -18,7 +18,7 @@ const store = barracks({
   onAction: (action, state, name, caller, createSend) => {
     console.log(`action: ${action}`)
   })
-  onState: (action, state, prev, caller, createSend) => {
+  onStateChange: (action, state, prev, caller, createSend) => {
     console.log(`state: ${prev} -> ${state}`)
   })
 })
@@ -49,7 +49,7 @@ Handlers can be:
   will `throw` on each error.
 - __onAction(action, state, name, caller, createSend):__ called when an
   `action` is fired.
-- __onState(action, state, prev, caller, createSend):__ called after a reducer
+- __onStateChange(action, state, prev, caller, createSend):__ called after a reducer
   changes the `state`.
 
 `createSend()` is a special function that allows the creation of a new named

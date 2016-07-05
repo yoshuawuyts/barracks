@@ -60,7 +60,7 @@ function dispatcher (handlers) {
         }
       })
       return xtend(_state, xtend(opts.state, nsState))
-    } else if (opts.noFreeze) {
+    } else if (opts.freeze === false) {
       return xtend(_state)
     } else {
       return Object.freeze(xtend(_state))
@@ -76,16 +76,16 @@ function dispatcher (handlers) {
     // register values from the models
     models.forEach(function (model) {
       const ns = model.namespace
-      if (!stateCalled && model.state && !opts.noState) {
+      if (!stateCalled && model.state && opts.state !== false) {
         apply(ns, model.state, _state)
       }
-      if (!reducersCalled && model.reducers && !opts.noReducers) {
+      if (!reducersCalled && model.reducers && opts.reducers !== false) {
         apply(ns, model.reducers, reducers)
       }
-      if (!effectsCalled && model.effects && !opts.noEffects) {
+      if (!effectsCalled && model.effects && opts.effects !== false) {
         apply(ns, model.effects, effects)
       }
-      if (!subsCalled && model.subscriptions && !opts.noSubscriptions) {
+      if (!subsCalled && model.subscriptions && opts.subscriptions !== false) {
         apply(ns, model.subscriptions, subscriptions, createSend, onError)
       }
     })

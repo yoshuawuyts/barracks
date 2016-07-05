@@ -15,10 +15,10 @@ const store = barracks({
   onError: (err, state, createSend) => {
     console.error(`error: ${err}`)
   }),
-  onAction: (action, state, name, caller, createSend) => {
-    console.log(`action: ${action}`)
+  onAction: (data, state, name, caller, createSend) => {
+    console.log(`data: ${data}`)
   })
-  onStateChange: (action, state, prev, caller, createSend) => {
+  onStateChange: (data, state, prev, caller, createSend) => {
     console.log(`state: ${prev} -> ${state}`)
   })
 })
@@ -47,9 +47,9 @@ Handlers can be:
 - __onError(err, state, createSend):__ called when an `effect` or
   `subscription` emit an error. If no handler is passed, the default handler
   will `throw` on each error.
-- __onAction(action, state, name, caller, createSend):__ called when an
+- __onAction(data, state, name, caller, createSend):__ called when an
   `action` is fired.
-- __onStateChange(action, state, prev, caller, createSend):__ called after a reducer
+- __onStateChange(data, state, prev, caller, createSend):__ called after a reducer
   changes the `state`.
 
 `createSend()` is a special function that allows the creation of a new named
@@ -150,7 +150,7 @@ app.model({
 ### reducers
 Reducers are synchronous functions that return a value syncrhonously. No
 eventual values, just values that are relevant for the state. It takes two
-arguments of `action` and `state`. `action` is the data that was emitted, and
+arguments of `data` and `state`. `data` is the data that was emitted, and
 `state` is the current state. Each action has a name that can be accessed
 through `send(name)`, and when under a namespace can be accessed as
 `send(namespace:name)`. When operating under a namespace, reducers only have
@@ -170,10 +170,10 @@ app.model({
   namespace: 'burlybeardos',
   state: { count: 1 },
   reducers: {
-    feedPlantcake: (action, state) => {
+    feedPlantcake: (data, state) => {
       return { count: state.count + 1 }
     },
-    trimBeard: (action, state) => ({ count: state.count - 1 })
+    trimBeard: (data, state) => ({ count: state.count - 1 })
   }
 })
 ```
@@ -202,17 +202,17 @@ single model.
 ```js
 const http = require('xhr')
 const app = barracks({
-  onError: (action, state, prev, send) => send('app:error', action)
+  onError: (data, state, prev, send) => send('app:error', data)
 })
 
 app.model({
   namespace: 'app',
   effects: {
-    error: (action, state, send, done) => {
+    error: (data, state, send, done) => {
       // if doing http calls here be super sure not to get lost
       // in a recursive error handling loop: remember this IS
       // the error handler
-      console.error(action.message)
+      console.error(data.message)
       done()
     }
   }
@@ -222,10 +222,10 @@ app.model({
   namespace: 'foo',
   state: { foo: 1 },
   reducers: {
-    moreFoo: (action, state) => ({ foo: state.foo + action.count })
+    moreFoo: (data, state) => ({ foo: state.foo + data.count })
   }
   effects: {
-    fetch: (action, state, send, done) => {
+    fetch: (data, state, send, done) => {
       http('foobar.com', function (err, res, body) {
         if (err || res.statusCode !== 200) {
           return done(new Error({
@@ -257,7 +257,7 @@ app.model({
     }
   },
   effects: {
-    printWoofs: (action, state) => console.log(action.woof)
+    printWoofs: (data, state) => console.log(data.woof)
   }
 })
 ```

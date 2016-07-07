@@ -51,12 +51,13 @@ function dispatcher (handlers) {
       const nsState = {}
       models.forEach(function (model) {
         const ns = model.namespace
+        const modelState = model.state || {}
         if (ns) {
           nsState[ns] = {}
-          apply(ns, model.state, nsState)
+          apply(ns, modelState, nsState)
           nsState[ns] = xtend(nsState[ns], opts.state[ns])
         } else {
-          apply(model.namespace, model.state, initialState)
+          apply(model.namespace, modelState, initialState)
         }
       })
       return xtend(_state, xtend(opts.state, nsState))

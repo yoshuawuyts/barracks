@@ -197,7 +197,7 @@ function apply (ns, source, target, createSend, done) {
       target[key] = source[key]
     }
     if (createSend && done) {
-      const send = createSend('subscription: ' + ns ? ns + ':' + key : key)
+      const send = createSend('subscription: ' + (ns ? ns + ':' + key : key))
       source[key](send, done)
     }
   })

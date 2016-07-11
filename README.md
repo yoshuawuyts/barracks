@@ -300,7 +300,7 @@ start hitting edge cases like we did in `choo` :sparkles:
   client-side router
 - [yo-yo](https://github.com/maxogden/yo-yo) - template string based view
   framework
-- [send-action](https://github.com/sethdvincent/send-action) - unidirectional
+- [send-action](https://github.com/sethvincent/send-action) - unidirectional
   action emitter
 
 ## Installation

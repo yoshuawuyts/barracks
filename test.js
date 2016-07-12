@@ -83,6 +83,21 @@ tape('api: state = store.state()', (t) => {
     t.deepEqual(state, { foo: 'bar' })
   })
 
+  t.test('should initialize state with empty namespace object', (t) => {
+    t.plan(1)
+    const store = barracks()
+    store.model({
+      namespace: 'beep',
+      state: {}
+    })
+    store.start()
+    const state = store.state()
+    const expected = {
+      beep: {}
+    }
+    t.deepEqual(expected, state, 'has initial empty namespace object')
+  })
+
   t.test('should return the combined state', (t) => {
     t.plan(1)
     const store = barracks()

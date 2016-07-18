@@ -14,13 +14,13 @@ const barracks = require('barracks')
 const store = barracks({
   onError: (err, state, createSend) => {
     console.error(`error: ${err}`)
-  }),
+  },
   onAction: (data, state, name, caller, createSend) => {
     console.log(`data: ${data}`)
-  })
+  },
   onStateChange: (data, state, prev, caller, createSend) => {
     console.log(`state: ${prev} -> ${state}`)
-  })
+  }
 })
 
 store.model({

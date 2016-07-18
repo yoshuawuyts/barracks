@@ -189,9 +189,9 @@ function dispatcher (handlers) {
 // which is used to nest properties.
 // (str, obj, obj, fn?) -> null
 function apply (ns, source, target, createSend, done) {
+  if (ns && !target[ns]) target[ns] = {}
   Object.keys(source).forEach(function (key) {
     if (ns) {
-      if (!target[ns]) target[ns] = {}
       target[ns][key] = source[key]
     } else {
       target[key] = source[key]

@@ -158,12 +158,14 @@ function dispatcher (handlers) {
         if (_reducers && _reducers[actionName]) {
           if (ns) {
             const reducedState = _reducers[actionName](data, _state[ns])
-            mutate(newState[ns], xtend(_state[ns], reducedState))
+            newState[ns] = xtend(_state[ns], reducedState)
           } else {
             mutate(newState, reducers[actionName](data, _state))
           }
           reducersCalled = true
-          if (onStateChange) onStateChange(data, newState, _state, actionName, createSend)
+          if (onStateChange) {
+            onStateChange(data, newState, _state, actionName, createSend)
+          }
           _state = newState
           cb()
         }

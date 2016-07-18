@@ -453,6 +453,28 @@ tape('hooks: onStateChange', (t) => {
     const send = createSend('test', true)
     send('increment', { count: 3 })
   })
+
+  t.test('previous state should not be mutated', (t) => {
+    t.plan(2)
+    const storeNS = barracks({
+      onStateChange: (action, state, prev, caller, createSend) => {
+        t.equal(state.ns.items.length, 3, 'state was updated')
+        t.equal(prev.ns.items.length, 0, 'prev was left as-is')
+      }
+    })
+
+    storeNS.model({
+      namespace: 'ns',
+      state: { items: [] },
+      reducers: {
+        add: (_, state) => ({ items: [1, 2, 3] })
+      }
+    })
+
+    const createSendNS = storeNS.start()
+    const sendNS = createSendNS('testNS', true)
+    sendNS('ns:add')
+  })
 })
 
 tape('hooks: onAction', (t) => {

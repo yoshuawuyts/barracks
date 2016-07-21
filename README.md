@@ -5,13 +5,15 @@
 [![Downloads][downloads-image]][downloads-url]
 
 Action dispatcher for unidirectional data flows. Creates tiny models of data
-that can be accessed through actions with an API of only 5 functions
+that can be accessed through actions through a small API.
 
 ## Usage
 ````js
 const barracks = require('barracks')
 
-const store = barracks({
+const store = barracks()
+
+store.use({
   onError: (err, state, createSend) => {
     console.error(`error: ${err}`)
   },
@@ -41,16 +43,21 @@ document.addEventListener('DOMContentLoaded', () => {
 ````
 
 ## API
-### store = barracks(handlers)
-Initialize a new `barracks` instance. Takes an optional object of handlers.
-Handlers can be:
+### store = barracks(hooks?)
+Initialize a new `barracks` instance. Takes an optional object of hooks which
+is passed to `.use()`.
+
+### store.use(hooks)
+Register new hooks on the store. Hooks are little plugins that can extend
+behavior or perform actions at specific points in the lifecycle. The following
+hooks are possible:
 - __onError(err, state, createSend):__ called when an `effect` or
-  `subscription` emit an error. If no handler is passed, the default handler
-  will `throw` on each error.
-- __onAction(data, state, name, caller, createSend):__ called when an
-  `action` is fired.
-- __onStateChange(data, state, prev, caller, createSend):__ called after a reducer
-  changes the `state`.
+  `subscription` emit an error. If no hook is passed, the default hook will
+  `throw` on each error.
+- __onAction(data, state, name, caller, createSend):__ called when an `action`
+  is fired.
+- __onStateChange(data, state, prev, caller, createSend):__ called after a
+  reducer changes the `state`.
 
 `createSend()` is a special function that allows the creation of a new named
 `send()` function. The first argument should be a string which is the name, the
@@ -58,10 +65,10 @@ second argument is a boolean `callOnError` which can be set to `true` to call
 the `onError` hook istead of a provided callback. It then returns a
 `send(actionName, data?)` function.
 
-Handlers should be used with care, as they're the most powerful interface into
+Hooks should be used with care, as they're the most powerful interface into
 the state. For application level code it's generally recommended to delegate to
 actions inside models using the `send()` call, and only shape the actions
-inside the handlers.
+inside the hooks.
 
 ### store.model()
 Register a new model on the store. Models are optionally namespaced objects

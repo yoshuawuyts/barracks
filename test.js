@@ -27,6 +27,44 @@ tape('api: store.model()', (t) => {
   })
 })
 
+tape('api: store.use()', (t) => {
+  t.test('should call multiples', (t) => {
+    t.plan(1)
+    const store = barracks()
+    const called = { first: false, second: false }
+
+    store.use({
+      onAction: (data, state, name, caller, createSend) => {
+        called.first = true
+      }
+    })
+
+    store.use({
+      onAction: (data, state, name, caller, createSend) => {
+        called.second = true
+      }
+    })
+
+    store.model({
+      state: {
+        count: 0
+      },
+      reducers: {
+        foo: (data, state) => ({ count: state.count + 1 })
+      }
+    })
+
+    const createSend = store.start()
+    const send = createSend('test', true)
+    send('foo', { count: 3 })
+
+    setTimeout(function () {
+      const expected = { first: true, second: true }
+      t.deepEqual(called, expected, 'all hooks were called')
+    }, 100)
+  })
+})
+
 tape('api: createSend = store.start(opts)', (t) => {
   t.test('should validate input types', (t) => {
     t.plan(3)

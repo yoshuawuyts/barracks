@@ -2,21 +2,21 @@ const mutate = require('xtend/mutable')
 const assert = require('assert')
 const xtend = require('xtend')
 
+const applyHook = require('./apply-hook')
+
 module.exports = dispatcher
 
 // initialize a new barracks instance
 // obj -> obj
-function dispatcher (handlers) {
-  handlers = handlers || {}
-  assert.equal(typeof handlers, 'object', 'barracks: handlers should be undefined or an object')
+function dispatcher (hooks) {
+  hooks = hooks || {}
+  assert.equal(typeof hooks, 'object', 'barracks: hooks should be undefined or an object')
 
-  const onError = wrapOnError(handlers.onError || defaultOnError)
-  const onAction = handlers.onAction
-  const onStateChange = handlers.onStateChange
+  const onStateChangeHooks = []
+  const onActionHooks = []
+  const onErrorHooks = []
 
-  assert.ok(!handlers.onError || typeof handlers.onError === 'function', 'barracks: onError should be undefined or a function')
-  assert.ok(!onAction || typeof onAction === 'function', 'barracks: onAction should be undefined or a function')
-  assert.ok(!onStateChange || typeof onStateChange === 'function', 'barracks: onStateChange should be undefined or a function')
+  useHooks(hooks)
 
   var reducersCalled = false
   var effectsCalled = false
@@ -32,7 +32,21 @@ function dispatcher (handlers) {
   start.model = setModel
   start.state = getState
   start.start = start
+  start.use = useHooks
   return start
+
+  // push an object of hooks onto an array
+  // obj -> null
+  function useHooks (hooks) {
+    assert.equal(typeof hooks, 'object', 'barracks.use: hooks should be an object')
+    assert.ok(!hooks.onError || typeof hooks.onError === 'function', 'barracks.use: onError should be undefined or a function')
+    assert.ok(!hooks.onAction || typeof hooks.onAction === 'function', 'barracks.use: onAction should be undefined or a function')
+    assert.ok(!hooks.onStateChange || typeof hooks.onStateChange === 'function', 'barracks.use: onStateChange should be undefined or a function')
+
+    if (hooks.onError) onErrorHooks.push(wrapOnError(hooks.onError))
+    if (hooks.onAction) onActionHooks.push(hooks.onAction)
+    if (hooks.onStateChange) onStateChangeHooks.push(hooks.onStateChange)
+  }
 
   // push a model to be initiated
   // obj -> null
@@ -68,7 +82,7 @@ function dispatcher (handlers) {
     }
   }
 
-  // initialize the store handlers, get the send() function
+  // initialize the store hooks, get the send() function
   // obj? -> fn
   function start (opts) {
     opts = opts || {}
@@ -87,7 +101,9 @@ function dispatcher (handlers) {
         apply(ns, model.effects, effects)
       }
       if (!subsCalled && model.subscriptions && opts.subscriptions !== false) {
-        apply(ns, model.subscriptions, subscriptions, createSend, onError)
+        apply(ns, model.subscriptions, subscriptions, createSend, function (err) {
+          applyHook(onErrorHooks, err)
+        })
       }
     })
 
@@ -95,6 +111,8 @@ function dispatcher (handlers) {
     if (!opts.noReducers) reducersCalled = true
     if (!opts.noEffects) effectsCalled = true
     if (!opts.noSubscriptions) subsCalled = true
+
+    if (!onErrorHooks.length) onErrorHooks.push(wrapOnError(defaultOnError))
 
     return createSend
 
@@ -120,7 +138,7 @@ function dispatcher (handlers) {
         function onErrorCallback (err) {
           err = err || null
           if (err) {
-            onError(err, _state, function createSend (selfName) {
+            applyHook(onErrorHooks, err, _state, function createSend (selfName) {
               return function send (name, data) {
                 assert.equal(typeof name, 'string', 'barracks.store.start.send: name should be a string')
                 data = (typeof data === 'undefined' ? null : data)
@@ -144,7 +162,9 @@ function dispatcher (handlers) {
         var effectsCalled = false
         const newState = xtend(_state)
 
-        if (onAction) onAction(data, _state, name, caller, createSend)
+        if (onActionHooks.length) {
+          applyHook(onActionHooks, data, _state, name, caller, createSend)
+        }
 
         // validate if a namespace exists. Namespaces are delimited by ':'.
         var actionName = name
@@ -163,8 +183,8 @@ function dispatcher (handlers) {
             mutate(newState, reducers[actionName](data, _state))
           }
           reducersCalled = true
-          if (onStateChange) {
-            onStateChange(data, newState, _state, actionName, createSend)
+          if (onStateChangeHooks.length) {
+            applyHook(onStateChangeHooks, data, newState, _state, actionName, createSend)
           }
           _state = newState
           cb()

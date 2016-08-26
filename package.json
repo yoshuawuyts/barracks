@@ -22,15 +22,15 @@
   "license": "MIT",
   "devDependencies": {
     "bundle-collapser": "^1.2.1",
-    "coveralls": "~2.10.0",
+    "coveralls": "~2.11.12",
     "es2020": "^1.1.6",
-    "istanbul": "~0.2.10",
+    "istanbul": "~0.4.5",
     "noop2": "^2.0.0",
-    "standard": "^7.1.2",
-    "tape": "^3.0.3",
+    "standard": "^8.0.0",
+    "tape": "^4.6.0",
     "uglifyify": "^3.0.2",
     "unassertify": "^2.0.3",
-    "watch": "^0.16.0"
+    "watch": "^0.19.2"
   },
   "dependencies": {
     "xtend": "^4.0.1"

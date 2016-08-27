@@ -187,7 +187,7 @@ function dispatcher (hooks) {
             applyHook(onStateChangeHooks, data, newState, _state, actionName, createSend)
           }
           _state = newState
-          cb()
+          cb(null, newState)
         }
 
         const _effects = ns ? effects[ns] : effects

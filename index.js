@@ -232,7 +232,7 @@ function defaultOnError (err) {
 }
 
 function wrapOnError (onError) {
-  return function onErrorWrap (err) {
-    if (err) onError(err)
+  return function onErrorWrap (err, state, createSend) {
+    if (err) onError(err, state, createSend)
   }
 }

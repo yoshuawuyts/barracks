@@ -5,7 +5,7 @@
 [![Downloads][downloads-image]][downloads-url]
 
 Action dispatcher for unidirectional data flows. Creates tiny models of data
-that can be accessed through actions through a small API.
+that can be accessed with actions through a small API.
 
 ## Usage
 ````js
@@ -49,44 +49,44 @@ is passed to `.use()`.
 
 ### store.use(hooks)
 Register new hooks on the store. Hooks are little plugins that can extend
-behavior or perform actions at specific points in the lifecycle. The following
+behavior or perform actions at specific points in the life cycle. The following
 hooks are possible:
 - __onError(err, state, createSend):__ called when an `effect` or
-  `subscription` emit an error. If no hook is passed, the default hook will
-  `throw` on each error.
+  `subscription` emit an error; if no hook is passed, the default hook will
+  `throw` on each error
 - __onAction(data, state, name, caller, createSend):__ called when an `action`
-  is fired.
+  is fired
 - __onStateChange(data, state, prev, caller, createSend):__ called after a
-  reducer changes the `state`.
+  reducer changes the `state`
 
 `createSend()` is a special function that allows the creation of a new named
 `send()` function. The first argument should be a string which is the name, the
 second argument is a boolean `callOnError` which can be set to `true` to call
-the `onError` hook istead of a provided callback. It then returns a
+the `onError` hook instead of a provided callback. It then returns a
 `send(actionName, data?)` function.
 
 Hooks should be used with care, as they're the most powerful interface into
-the state. For application level code it's generally recommended to delegate to
+the state. For application level code, it's generally recommended to delegate to
 actions inside models using the `send()` call, and only shape the actions
 inside the hooks.
 
 ### store.model()
 Register a new model on the store. Models are optionally namespaced objects
-with an initial `state`, and handlers for dealing with data:
+with an initial `state` and handlers for dealing with data:
 - __namespace:__ namespace the model so that it cannot access any properties
   and handlers in other models
 - __state:__ initial values of `state` inside the model
-- __reducers:__ synchronous operations that modify state. Triggered by `actions`
-- __effects:__ asynchronous operations that don't modify state directly.
-  Triggered by `actions`, can call `actions`
+- __reducers:__ synchronous operations that modify state; triggered by `actions`
+- __effects:__ asynchronous operations that don't modify state directly;
+  triggered by `actions`, can call `actions`
 - __subscriptions:__ asynchronous read-only operations that don't modify state
-  directly. Can call `actions`
+  directly; can call `actions`
 
 `state` within handlers is immutable through `Object.freeze()` and thus cannot
 be modified. Return data from `reducers` to modify `state`. See [handler
 signatures](#handler-signatures) for more info on the handlers.
 
-For debugging purposes internal references to values can be inspected through a
+For debugging purposes, internal references to values can be inspected through a
 series of private accessors:
 - `store._subscriptions`
 - `store._reducers`
@@ -95,26 +95,26 @@ series of private accessors:
 
 ### state = store.state(opts)
 Get the current state from the store. Opts can take the following values:
-- __freeze:__ default: true. Set to false to not freeze state in handlers
-  using `Object.freeze()`. Useful for optimizing performance in production
-  builds.
+- __freeze:__ default: true; set to false to not freeze state in handlers
+  using `Object.freeze()`; useful for optimizing performance in production
+  builds
 - __state:__ pass in a state object that will be merged with the state returned
-  from the store. Useful for rendering in Node.
+  from the store; useful for rendering in Node
 
 ### send = createSend(name) = store.start(opts)
 Start the store and get a `createSend(name)` function. Pass a unique `name` to
 `createSend()` to get a `send()` function. Opts can take the following values:
-- __subscriptions:__ default: true. Set to false to not register
-  `subscriptions` when starting the application. Useful to delay `init`
-  functions until the DOM has loaded.
-- __effects:__ default: true. Set to `false` to not register `effects` when
-  starting the application. Useful when only wanting the initial `state`
-- __reducers:__ default: true. Set to false to not register `reducers` when
-  starting the application. Useful when only wanting the initial `state`
+- __subscriptions:__ default: true; set to false to not register
+  `subscriptions` when starting the application; useful to delay `init`
+  functions until the DOM has loaded
+- __effects:__ default: true; set to `false` to not register `effects` when
+  starting the application; useful when only wanting the initial `state`
+- __reducers:__ default: true; set to false to not register `reducers` when
+  starting the application; useful when only wanting the initial `state`
 
 If the store has disabled any of the handlers (e.g. `{ reducers: false }`),
 calling `store.start()` a second time will register the remaining values. This
-is a useful if not everything can be started at the same time (e.g. have
+is useful if not everything can be started at the same time (e.g. have
 `subscriptions` wait for the `DOMContentLoaded` event).
 
 ### send(name, data?)
@@ -155,7 +155,7 @@ app.model({
 ```
 
 ### reducers
-Reducers are synchronous functions that return a value syncrhonously. No
+Reducers are synchronous functions that return a value synchronously. No
 eventual values, just values that are relevant for the state. It takes two
 arguments of `data` and `state`. `data` is the data that was emitted, and
 `state` is the current state. Each action has a name that can be accessed
@@ -188,15 +188,15 @@ app.model({
 ### effects
 `effects` are asynchronous methods that can be triggered by `actions` in
 `send()`. They never update the state directly, but can instead do thing
-asyncrhonously, and then call `send()` again to trigger a `reducer` that can
+asynchronously, and then call `send()` again to trigger a `reducer` that can
 update the state. `effects` can also trigger other `effects`, making them fully
-composable. Generalyy it's recommended to only have `effects` without a
+composable. Generally, it's recommended to only have `effects` without a
 `namespace` call other `effects`, as to keep namespaced models as isolated as
 possible.
 
 When an `effect` is done executing, or encounters an error, it should call the
 final `done(err)` callback. If the `effect` was called by another `effect` it
-will call the callback of the caller. When an error propegates all the way to
+will call the callback of the caller. When an error propagates all the way to
 the top, the `onError` handler will be called, registered in
 `barracks(handlers)`. If no callback is registered, errors will `throw`.
 
@@ -274,26 +274,26 @@ it can be communicated to the `onError` hook.
 ## FAQ
 ### What is an "action dispatcher"?
 An action dispatcher gets data from one place to another without tightly
-coupling code. The best known use case for this is in the `flux` pattern.  Say
+coupling code. The best known use case for this is in the `flux` pattern. Say
 you want to update a piece of data (for example a user's name), instead of
-directly calling the update logic inside the view the action calls a function
+directly calling the update logic inside the view, the action calls a function
 that updates the user's name for you. Now all the views that need to update a
-user's name can call the same action and pass in the relevant data.  This
+user's name can call the same action and pass in the relevant data. This
 pattern tends to make views more robust and easier to maintain.
 
 ### Why did you build this?
 Passing messages around should not be complicated. Many `flux` implementations
 casually throw restrictions at users without having a clear architecture. I
-don't like that. `barracks` is a package creates a clear flow of data within an
+don't like that. `barracks` is a package that creates a clear flow of data within an
 application, concerning itself with state, code separation, and data flow. I
-believe that having strong opinions and being transparant in them makes for
-architectures than sprinkles of opinions left and right, without a cohesive
+believe that having strong opinions and being transparent in them makes for
+better architectures than sprinkles of opinions left and right, without a cohesive
 story as to _why_.
 
 ### How is this different from choo?
 `choo` is a framework that handles views, data and all problems related to
 that. This is a package that only concerns itself with data flow, without being
-explicitely tied to the DOM.
+explicitly tied to the DOM.
 
 ### This looks like more than five functions!
 Welllll, no. It's technically five functions with a high arity, hah. Nah,

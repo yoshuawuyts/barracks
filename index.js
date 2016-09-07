@@ -16,7 +16,12 @@ function dispatcher (hooks) {
   const onActionHooks = []
   const onErrorHooks = []
 
-  useHooks(hooks)
+  const subscriptionWraps = []
+  const initialStateWraps = []
+  const reducerWraps = []
+  const effectWraps = []
+
+  use(hooks)
 
   var reducersCalled = false
   var effectsCalled = false
@@ -32,20 +37,24 @@ function dispatcher (hooks) {
   start.model = setModel
   start.state = getState
   start.start = start
-  start.use = useHooks
+  start.use = use
   return start
 
   // push an object of hooks onto an array
   // obj -> null
-  function useHooks (hooks) {
+  function use (hooks) {
     assert.equal(typeof hooks, 'object', 'barracks.use: hooks should be an object')
     assert.ok(!hooks.onError || typeof hooks.onError === 'function', 'barracks.use: onError should be undefined or a function')
     assert.ok(!hooks.onAction || typeof hooks.onAction === 'function', 'barracks.use: onAction should be undefined or a function')
     assert.ok(!hooks.onStateChange || typeof hooks.onStateChange === 'function', 'barracks.use: onStateChange should be undefined or a function')
 
+    if (hooks.onStateChange) onStateChangeHooks.push(hooks.onStateChange)
     if (hooks.onError) onErrorHooks.push(wrapOnError(hooks.onError))
     if (hooks.onAction) onActionHooks.push(hooks.onAction)
-    if (hooks.onStateChange) onStateChangeHooks.push(hooks.onStateChange)
+    if (hooks.wrapSubscriptions) subscriptionWraps.push(hooks.wrapSubscriptions)
+    if (hooks.wrapInitialState) initialStateWraps.push(hooks.wrapInitialState)
+    if (hooks.wrapReducers) reducerWraps.push(hooks.wrapReducers)
+    if (hooks.wrapEffects) effectWraps.push(hooks.wrapEffects)
   }
 
   // push a model to be initiated
@@ -60,26 +69,32 @@ function dispatcher (hooks) {
   function getState (opts) {
     opts = opts || {}
     assert.equal(typeof opts, 'object', 'barracks.store.state: opts should be an object')
-    if (opts.state) {
-      const initialState = {}
-      const nsState = {}
-      models.forEach(function (model) {
-        const ns = model.namespace
-        const modelState = model.state || {}
-        if (ns) {
-          nsState[ns] = {}
-          apply(ns, modelState, nsState)
-          nsState[ns] = xtend(nsState[ns], opts.state[ns])
-        } else {
-          apply(model.namespace, modelState, initialState)
-        }
-      })
-      return xtend(_state, xtend(opts.state, nsState))
-    } else if (opts.freeze === false) {
-      return xtend(_state)
-    } else {
-      return Object.freeze(xtend(_state))
-    }
+
+    const state = opts.state
+    if (!opts.state && opts.freeze === false) return xtend(_state)
+    else if (!opts.state) return Object.freeze(xtend(_state))
+    assert.equal(typeof state, 'object', 'barracks.store.state: state should be an object')
+
+    const nsState = {}
+
+    models.forEach(function (model) {
+      const ns = model.namespace
+      const modelState = model.state || {}
+      if (ns) {
+        nsState[ns] = {}
+        apply(ns, modelState, nsState)
+        nsState[ns] = xtend(nsState[ns], state[ns])
+      } else {
+        mutate(nsState, modelState)
+      }
+    })
+
+    const tmpState = xtend(_state, xtend(state, nsState))
+    const wrappedState = wrapHook(tmpState, initialStateWraps)
+
+    return (opts.freeze === false)
+      ? wrappedState
+      : Object.freeze(wrappedState)
   }
 
   // initialize the store hooks, get the send() function
@@ -92,25 +107,46 @@ function dispatcher (hooks) {
     models.forEach(function (model) {
       const ns = model.namespace
       if (!stateCalled && model.state && opts.state !== false) {
-        apply(ns, model.state, _state)
+        const modelState = model.state || {}
+        if (ns) {
+          _state[ns] = _state[ns] || {}
+          apply(ns, modelState, _state)
+        } else {
+          mutate(_state, modelState)
+        }
       }
       if (!reducersCalled && model.reducers && opts.reducers !== false) {
-        apply(ns, model.reducers, reducers)
+        apply(ns, model.reducers, reducers, function (cb) {
+          return wrapHook(cb, reducerWraps)
+        })
       }
       if (!effectsCalled && model.effects && opts.effects !== false) {
-        apply(ns, model.effects, effects)
+        apply(ns, model.effects, effects, function (cb) {
+          return wrapHook(cb, effectWraps)
+        })
       }
       if (!subsCalled && model.subscriptions && opts.subscriptions !== false) {
-        apply(ns, model.subscriptions, subscriptions, createSend, function (err) {
-          applyHook(onErrorHooks, err)
+        apply(ns, model.subscriptions, subscriptions, function (cb, key) {
+          const send = createSend('subscription: ' + (ns ? ns + ':' + key : key))
+          cb = wrapHook(cb, subscriptionWraps)
+          cb(send, function (err) {
+            applyHook(onErrorHooks, err)
+          })
+          return cb
         })
       }
     })
 
-    if (!opts.noState) stateCalled = true
+    // the state wrap is special because we want to operate on the full
+    // state rather than indvidual chunks, so we apply it outside the loop
+    if (!stateCalled && opts.state !== false) {
+      _state = wrapHook(_state, initialStateWraps)
+    }
+
+    if (!opts.noSubscriptions) subsCalled = true
     if (!opts.noReducers) reducersCalled = true
     if (!opts.noEffects) effectsCalled = true
-    if (!opts.noSubscriptions) subsCalled = true
+    if (!opts.noState) stateCalled = true
 
     if (!onErrorHooks.length) onErrorHooks.push(wrapOnError(defaultOnError))
 
@@ -210,18 +246,12 @@ function dispatcher (hooks) {
 // optionally contains a namespace
 // which is used to nest properties.
 // (str, obj, obj, fn?) -> null
-function apply (ns, source, target, createSend, done) {
+function apply (ns, source, target, wrap) {
   if (ns && !target[ns]) target[ns] = {}
   Object.keys(source).forEach(function (key) {
-    if (ns) {
-      target[ns][key] = source[key]
-    } else {
-      target[key] = source[key]
-    }
-    if (createSend && done) {
-      const send = createSend('subscription: ' + (ns ? ns + ':' + key : key))
-      source[key](send, done)
-    }
+    const cb = wrap ? wrap(source[key], key) : source[key]
+    if (ns) target[ns][key] = cb
+    else target[key] = cb
   })
 }
 
@@ -235,4 +265,14 @@ function wrapOnError (onError) {
   return function onErrorWrap (err, state, createSend) {
     if (err) onError(err, state, createSend)
   }
+}
+
+// take a apply an array of transforms onto a value. The new value
+// must be returned synchronously from the transform
+// (any, [fn]) -> any
+function wrapHook (value, transforms) {
+  transforms.forEach(function (transform) {
+    value = transform(value)
+  })
+  return value
 }

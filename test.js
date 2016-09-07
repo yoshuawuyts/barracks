@@ -1,4 +1,5 @@
 const barracks = require('./')
+const xtend = require('xtend')
 const noop = require('noop2')
 const tape = require('tape')
 
@@ -546,4 +547,58 @@ tape('hooks: onAction', (t) => {
 tape('hooks: onError', (t) => {
   t.test('should have a default err handler')
   t.test('should not call itself')
+})
+
+tape('wrappers: wrapSubscriptions')
+tape('wrappers: wrapReducers')
+tape('wrappers: wrapEffects')
+
+tape('wrappers: wrapInitialState', (t) => {
+  t.test('should wrap initial state in start', (t) => {
+    t.plan(2)
+    const store = barracks()
+    store.use({
+      wrapInitialState: (state) => {
+        t.deepEqual(state, { foo: 'bar' }, 'initial state is correct')
+        return xtend(state, { beep: 'boop' })
+      }
+    })
+
+    store.model({
+      state: { foo: 'bar' }
+    })
+
+    store.start()
+    process.nextTick(() => {
+      const state = store.state()
+      t.deepEqual(state, { foo: 'bar', beep: 'boop' }, 'wrapped state correct')
+    })
+  })
+
+  t.test('should wrap initial state in getState', (t) => {
+    t.plan(1)
+    const store = barracks()
+    store.use({
+      wrapInitialState: (state) => {
+        return xtend(state, { beep: 'boop' })
+      }
+    })
+
+    store.model({
+      state: { foo: 'bar' }
+    })
+
+    process.nextTick(() => {
+      const opts = {
+        state: { bin: 'baz' }
+      }
+      const expected = {
+        foo: 'bar',
+        beep: 'boop',
+        bin: 'baz'
+      }
+      const state = store.state(opts)
+      t.deepEqual(state, expected, 'wrapped state correct')
+    })
+  })
 })

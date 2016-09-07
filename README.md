@@ -57,7 +57,12 @@ hooks are possible:
 - __onAction(data, state, name, caller, createSend):__ called when an `action`
   is fired
 - __onStateChange(data, state, prev, caller, createSend):__ called after a
-  reducer changes the `state`
+  reducer changes the `state`.
+- __wrapSubscriptions(fn):__ wraps a `subscription` to add custom behavior
+- __wrapReducers(fn):__ wraps a `reducer` to add custom behavior
+- __wrapEffects(fn):__ wraps an `effect` to add custom behavior
+- __wrapInitialState(fn):__ mutate the initial `state` to add custom
+  behavior - useful to mutate the state before starting up
 
 `createSend()` is a special function that allows the creation of a new named
 `send()` function. The first argument should be a string which is the name, the

@@ -61,7 +61,7 @@ hooks are possible:
 - __wrapSubscriptions(fn):__ wraps a `subscription` to add custom behavior
 - __wrapReducers(fn):__ wraps a `reducer` to add custom behavior
 - __wrapEffects(fn):__ wraps an `effect` to add custom behavior
-- __wrapInitialState(fn):__ mutate the initial `state` to add custom
+- __wrapInitialState(obj):__ mutate the initial `state` to add custom
   behavior - useful to mutate the state before starting up
 
 `createSend()` is a special function that allows the creation of a new named
@@ -69,6 +69,25 @@ hooks are possible:
 second argument is a boolean `callOnError` which can be set to `true` to call
 the `onError` hook instead of a provided callback. It then returns a
 `send(actionName, data?)` function.
+
+The `wrap*` hooks are synchronously resolved when the `store.start()` method is
+called, and the corresponding values from the models are loaded. All wrap hooks
+(or wrappers) are passed the argument that would usually be called, so it can
+be wrapped or modified. Say we want to make all our `reducers` print `'golden
+pony'` every time they're run, we'd do:
+```js
+const barracks = require('barracks')
+const store = barracks()
+
+store.use({
+  wrapReducers: function wrapConstructor (reducer) {
+    return function wrapper (action, state) {
+      console.log('golden pony')
+      return reducer(action, state)
+    }
+  }
+})
+```
 
 Hooks should be used with care, as they're the most powerful interface into
 the state. For application level code, it's generally recommended to delegate to

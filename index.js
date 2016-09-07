@@ -75,21 +75,31 @@ function dispatcher (hooks) {
     else if (!opts.state) return Object.freeze(xtend(_state))
     assert.equal(typeof state, 'object', 'barracks.store.state: state should be an object')
 
-    const nsState = {}
+    const namespaces = []
+    const newState = {}
 
+    // apply all fields from the model, and namespaced fields from the passed
+    // in state
     models.forEach(function (model) {
       const ns = model.namespace
+      namespaces.push(ns)
       const modelState = model.state || {}
       if (ns) {
-        nsState[ns] = {}
-        apply(ns, modelState, nsState)
-        nsState[ns] = xtend(nsState[ns], state[ns])
+        newState[ns] = newState[ns] || {}
+        apply(ns, modelState, newState)
+        newState[ns] = xtend(newState[ns], state[ns])
       } else {
-        mutate(nsState, modelState)
+        mutate(newState, modelState)
       }
     })
 
-    const tmpState = xtend(_state, xtend(state, nsState))
+    // now apply all fields that weren't namespaced from the passed in state
+    Object.keys(state).forEach(function (key) {
+      if (namespaces.indexOf(key) !== -1) return
+      newState[key] = state[key]
+    })
+
+    const tmpState = xtend(_state, xtend(state, newState))
     const wrappedState = wrapHook(tmpState, initialStateWraps)
 
     return (opts.freeze === false)

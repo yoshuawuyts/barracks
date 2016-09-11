@@ -327,7 +327,7 @@ start hitting edge cases like we did in `choo` :sparkles:
 
 ## See Also
 - [choo](https://github.com/yoshuawuyts/choo) - sturdy frontend framework
-- [sheet-router](https://github.com/yoshuawuyts/wayfarer) - fast, modular
+- [sheet-router](https://github.com/yoshuawuyts/sheet-router) - fast, modular
   client-side router
 - [yo-yo](https://github.com/maxogden/yo-yo) - template string based view
   framework

@@ -140,7 +140,7 @@ function dispatcher (hooks) {
           const send = createSend('subscription: ' + (ns ? ns + ':' + key : key))
           cb = wrapHook(cb, subscriptionWraps)
           cb(send, function (err) {
-            applyHook(onErrorHooks, err)
+            applyHook(onErrorHooks, err, _state, createSend)
           })
           return cb
         })

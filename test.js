@@ -424,12 +424,17 @@ tape('handlers: subscriptions', (t) => {
   })
 
   t.test('should be able to emit an error', (t) => {
-    t.plan(2)
+    t.plan(4)
     const store = barracks({
-      onError: (err) => t.equal(err.message, 'oh no!', 'err was received')
+      onError: (err, state, createSend) => {
+        t.equal(err.message, 'oh no!', 'err was received')
+        t.equal((state || {}).a, 1, 'state was passed')
+        t.equal(typeof createSend, 'function', 'createSend is a function')
+      }
     })
 
     store.model({
+      state: { a: 1 },
       subscriptions: {
         mySub: (send, done) => {
           t.pass('sub initiated')

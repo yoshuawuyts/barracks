@@ -30,7 +30,7 @@
     "tape": "^4.6.0",
     "uglifyify": "^3.0.2",
     "unassertify": "^2.0.3",
-    "watch": "^0.19.2"
+    "watch": "^1.0.0"
   },
   "dependencies": {
     "xtend": "^4.0.1"

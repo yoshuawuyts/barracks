@@ -35,13 +35,13 @@ tape('api: store.use()', (t) => {
     const called = { first: false, second: false }
 
     store.use({
-      onAction: (data, state, name, caller, createSend) => {
+      onAction: (state, data, name, caller, createSend) => {
         called.first = true
       }
     })
 
     store.use({
-      onAction: (data, state, name, caller, createSend) => {
+      onAction: (state, data, name, caller, createSend) => {
         called.second = true
       }
     })
@@ -51,7 +51,7 @@ tape('api: store.use()', (t) => {
         count: 0
       },
       reducers: {
-        foo: (data, state) => ({ count: state.count + 1 })
+        foo: (state, data) => ({ count: state.count + 1 })
       }
     })
 
@@ -228,7 +228,7 @@ tape('handlers: reducers', (t) => {
       namespace: 'meow',
       state: { beep: 'boop' },
       reducers: {
-        woof: (action, state) => t.pass('meow.woof called')
+        woof: (state, data) => t.pass('meow.woof called')
       }
     })
 
@@ -238,13 +238,13 @@ tape('handlers: reducers', (t) => {
         beep: 'boop'
       },
       reducers: {
-        foo: (action, state) => {
-          t.deepEqual(action, { foo: 'baz' }, 'action is equal')
+        foo: (state, data) => {
+          t.deepEqual(data, { foo: 'baz' }, 'action is equal')
           t.equal(state.foo, 'bar', 'state.foo = bar')
           return { foo: 'baz' }
         },
-        sup: (action, state) => {
-          t.equal(action, 'nope', 'action is equal')
+        sup: (state, data) => {
+          t.equal(data, 'nope', 'action is equal')
           t.equal(state.beep, 'boop', 'state.beep = boop')
           return { beep: 'nope' }
         }
@@ -275,7 +275,7 @@ tape('handlers: effects', (t) => {
     store.model({
       namespace: 'meow',
       effects: {
-        woof: (action, state, send, done) => {
+        woof: (state, data, send, done) => {
           t.pass('woof called')
         }
       }
@@ -284,15 +284,15 @@ tape('handlers: effects', (t) => {
     store.model({
       state: { bin: 'baz', beep: 'boop' },
       reducers: {
-        bar: (action, state) => {
+        bar: (state, data) => {
           t.pass('reducer was called')
-          return { beep: action.beep }
+          return { beep: data.beep }
         }
       },
       effects: {
-        foo: (action, state, send, done) => {
+        foo: (state, data, send, done) => {
           t.pass('effect was called')
-          send('bar', { beep: action.beep }, () => {
+          send('bar', { beep: data.beep }, () => {
             t.pass('effect callback was called')
             done()
           })
@@ -316,7 +316,7 @@ tape('handlers: effects', (t) => {
     const store = barracks()
     store.model({
       effects: {
-        foo: (action, state, send, done) => {
+        foo: (state, data, send, done) => {
           t.pass('foo was called')
           send('bar', { beep: 'boop' }, () => {
             t.pass('foo:bar effect callback was called')
@@ -328,9 +328,9 @@ tape('handlers: effects', (t) => {
             })
           })
         },
-        bar: (action, state, send, done) => {
+        bar: (state, data, send, done) => {
           t.pass('bar was called')
-          t.deepEqual(action, { beep: 'boop' }, 'action is equal')
+          t.deepEqual(data, { beep: 'boop' }, 'action is equal')
           send('baz', (err, res) => {
             t.ifError(err, 'no error')
             t.equal(res, 'yay', 'res is equal')
@@ -338,7 +338,7 @@ tape('handlers: effects', (t) => {
             done()
           })
         },
-        baz: (action, state, send, done) => {
+        baz: (state, data, send, done) => {
           t.pass('baz effect was called')
           done(null, 'yay')
         }
@@ -354,7 +354,7 @@ tape('handlers: effects', (t) => {
     const store = barracks()
     store.model({
       effects: {
-        foo: (action, state, send, done) => {
+        foo: (state, data, send, done) => {
           t.pass('foo was called')
           send('bar', (err, res) => {
             t.ok(err, 'error detected')
@@ -362,7 +362,7 @@ tape('handlers: effects', (t) => {
             done()
           })
         },
-        bar: (action, state, send, done) => {
+        bar: (state, data, send, done) => {
           t.pass('bar was called')
           send('baz', (err, res) => {
             t.ok(err, 'error detected')
@@ -370,7 +370,7 @@ tape('handlers: effects', (t) => {
             done(err)
           })
         },
-        baz: (action, state, send, done) => {
+        baz: (state, data, send, done) => {
           t.pass('baz effect was called')
           done(new Error('oh noooo'))
         }
@@ -400,7 +400,7 @@ tape('handlers: subscriptions', (t) => {
         bar: () => t.pass('reducer called')
       },
       effects: {
-        foo: (action, state, send, done) => {
+        foo: (state, data, send, done) => {
           t.pass('foo was called')
           done(new Error('oh no!'), 'hello')
         }
@@ -450,8 +450,8 @@ tape('hooks: onStateChange', (t) => {
   t.test('should be called whenever state changes', (t) => {
     t.plan(4)
     const store = barracks({
-      onStateChange: (action, state, prev, caller, createSend) => {
-        t.deepEqual(action, { count: 3 }, 'action is equal')
+      onStateChange: (state, data, prev, caller, createSend) => {
+        t.deepEqual(data, { count: 3 }, 'action is equal')
         t.deepEqual(state, { count: 4 }, 'state is equal')
         t.deepEqual(prev, { count: 1 }, 'prev is equal')
         t.equal(caller, 'increment', 'caller is equal')
@@ -461,7 +461,7 @@ tape('hooks: onStateChange', (t) => {
     store.model({
       state: { count: 1 },
       reducers: {
-        increment: (action, state) => ({ count: state.count + action.count })
+        increment: (state, data) => ({ count: state.count + data.count })
       }
     })
 
@@ -473,7 +473,7 @@ tape('hooks: onStateChange', (t) => {
   t.test('should allow triggering other actions', (t) => {
     t.plan(2)
     const store = barracks({
-      onStateChange: function (action, state, prev, caller, createSend) {
+      onStateChange: function (state, data, prev, caller, createSend) {
         t.pass('onStateChange called')
         const send = createSend('test:onStateChange', true)
         send('foo')
@@ -483,13 +483,13 @@ tape('hooks: onStateChange', (t) => {
     store.model({
       state: { count: 1 },
       effects: {
-        foo: (action, state, send, done) => {
+        foo: (state, data, send, done) => {
           t.pass('called')
           done()
         }
       },
       reducers: {
-        increment: (action, state) => ({ count: state.count + action.count })
+        increment: (state, data) => ({ count: state.count + data.count })
       }
     })
 
@@ -501,7 +501,7 @@ tape('hooks: onStateChange', (t) => {
   t.test('previous state should not be mutated', (t) => {
     t.plan(2)
     const storeNS = barracks({
-      onStateChange: (action, state, prev, caller, createSend) => {
+      onStateChange: (state, data, prev, caller, createSend) => {
         t.equal(state.ns.items.length, 3, 'state was updated')
         t.equal(prev.ns.items.length, 0, 'prev was left as-is')
       }
@@ -525,8 +525,8 @@ tape('hooks: onAction', (t) => {
   t.test('should be called whenever an action is emitted', (t) => {
     t.plan(5)
     const store = barracks({
-      onAction: (action, state, actionName, caller, createSend) => {
-        t.deepEqual(action, { count: 3 }, 'action is equal')
+      onAction: (state, data, actionName, caller, createSend) => {
+        t.deepEqual(data, { count: 3 }, 'action is equal')
         t.deepEqual(state, { count: 1 }, 'state is equal')
         t.deepEqual(actionName, 'foo', 'actionName is equal')
         t.equal(caller, 'test', 'caller is equal')
@@ -536,7 +536,7 @@ tape('hooks: onAction', (t) => {
     store.model({
       state: { count: 1 },
       effects: {
-        foo: (action, state, send, done) => {
+        foo: (state, data, send, done) => {
           t.pass('effect called')
           done()
         }

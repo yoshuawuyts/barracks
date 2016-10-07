@@ -209,7 +209,7 @@ function dispatcher (hooks) {
         const newState = xtend(_state)
 
         if (onActionHooks.length) {
-          applyHook(onActionHooks, data, _state, name, caller, createSend)
+          applyHook(onActionHooks, _state, data, name, caller, createSend)
         }
 
         // validate if a namespace exists. Namespaces are delimited by ':'.
@@ -223,14 +223,14 @@ function dispatcher (hooks) {
         const _reducers = ns ? reducers[ns] : reducers
         if (_reducers && _reducers[actionName]) {
           if (ns) {
-            const reducedState = _reducers[actionName](data, _state[ns])
+            const reducedState = _reducers[actionName](_state[ns], data)
             newState[ns] = xtend(_state[ns], reducedState)
           } else {
-            mutate(newState, reducers[actionName](data, _state))
+            mutate(newState, reducers[actionName](_state, data))
           }
           reducersCalled = true
           if (onStateChangeHooks.length) {
-            applyHook(onStateChangeHooks, data, newState, _state, actionName, createSend)
+            applyHook(onStateChangeHooks, newState, data, _state, actionName, createSend)
           }
           _state = newState
           cb(null, newState)
@@ -239,8 +239,8 @@ function dispatcher (hooks) {
         const _effects = ns ? effects[ns] : effects
         if (!reducersCalled && _effects && _effects[actionName]) {
           const send = createSend('effect: ' + name)
-          if (ns) _effects[actionName](data, _state[ns], send, cb)
-          else _effects[actionName](data, _state, send, cb)
+          if (ns) _effects[actionName](_state[ns], data, send, cb)
+          else _effects[actionName](_state, data, send, cb)
           effectsCalled = true
         }
 

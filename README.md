@@ -17,10 +17,10 @@ store.use({
   onError: (err, state, createSend) => {
     console.error(`error: ${err}`)
   },
-  onAction: (data, state, name, caller, createSend) => {
+  onAction: (state, data, name, caller, createSend) => {
     console.log(`data: ${data}`)
   },
-  onStateChange: (data, state, prev, caller, createSend) => {
+  onStateChange: (state, data, prev, caller, createSend) => {
     console.log(`state: ${prev} -> ${state}`)
   }
 })
@@ -54,9 +54,9 @@ hooks are possible:
 - __onError(err, state, createSend):__ called when an `effect` or
   `subscription` emit an error; if no hook is passed, the default hook will
   `throw` on each error
-- __onAction(data, state, name, caller, createSend):__ called when an `action`
+- __onAction(state, data, name, caller, createSend):__ called when an `action`
   is fired
-- __onStateChange(data, state, prev, caller, createSend):__ called after a
+- __onStateChange(state, data, prev, caller, createSend):__ called after a
   reducer changes the `state`.
 - __wrapSubscriptions(fn):__ wraps a `subscription` to add custom behavior
 - __wrapReducers(fn):__ wraps a `reducer` to add custom behavior
@@ -81,9 +81,9 @@ const store = barracks()
 
 store.use({
   wrapReducers: function wrapConstructor (reducer) {
-    return function wrapper (action, state) {
+    return function wrapper (state, data) {
       console.log('golden pony')
-      return reducer(action, state)
+      return reducer(state, data)
     }
   }
 })
@@ -201,10 +201,10 @@ app.model({
   namespace: 'burlybeardos',
   state: { count: 1 },
   reducers: {
-    feedPlantcake: (data, state) => {
+    feedPlantcake: (state, data) => {
       return { count: state.count + 1 }
     },
-    trimBeard: (data, state) => ({ count: state.count - 1 })
+    trimBeard: (state, data) => ({ count: state.count - 1 })
   }
 })
 ```
@@ -233,13 +233,13 @@ single model.
 ```js
 const http = require('xhr')
 const app = barracks({
-  onError: (data, state, prev, send) => send('app:error', data)
+  onError: (state, data, prev, send) => send('app:error', data)
 })
 
 app.model({
   namespace: 'app',
   effects: {
-    error: (data, state, send, done) => {
+    error: (state, data, send, done) => {
       // if doing http calls here be super sure not to get lost
       // in a recursive error handling loop: remember this IS
       // the error handler
@@ -253,10 +253,10 @@ app.model({
   namespace: 'foo',
   state: { foo: 1 },
   reducers: {
-    moreFoo: (data, state) => ({ foo: state.foo + data.count })
+    moreFoo: (state, data) => ({ foo: state.foo + data.count })
   }
   effects: {
-    fetch: (data, state, send, done) => {
+    fetch: (state, data, send, done) => {
       http('foobar.com', function (err, res, body) {
         if (err || res.statusCode !== 200) {
           return done(new Error({
@@ -288,7 +288,7 @@ app.model({
     }
   },
   effects: {
-    printWoofs: (data, state) => console.log(data.woof)
+    printWoofs: (state, data) => console.log(data.woof)
   }
 })
 ```

@@ -220,6 +220,21 @@ tape('api: send(name, data?)', (t) => {
   })
 })
 
+tape('api: stop()', (t) => {
+  t.test('should stop executing send() calls', (t) => {
+    t.plan(1)
+    const store = barracks()
+    var count = 0
+    store.model({ reducers: { foo: (state, action) => { count += 1 } } })
+    const createSend = store.start()
+    const send = createSend('test', true)
+    send('foo')
+    store.stop()
+    send('foo')
+    setTimeout(() => t.equal(count, 1, 'no actions after stop()'), 10)
+  })
+})
+
 tape('handlers: reducers', (t) => {
   t.test('should be able to be called', (t) => {
     t.plan(6)

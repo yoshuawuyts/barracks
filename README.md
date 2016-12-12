@@ -146,6 +146,15 @@ Send a new action to the models with optional data attached. Namespaced models
 can be accessed by prefixing the name with the namespace separated with a `:`,
 e.g. `namespace:name`.
 
+### store.stop()
+
+After an app is "stopped" all subsequent `send()` calls become no-ops.
+
+```js
+store.stop()
+send('trimBeard') // -> does not call a reducer/effect
+```
+
 ## Handler signatures
 These are the signatures for the properties that can be passed into a model.
 

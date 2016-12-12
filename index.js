@@ -28,6 +28,8 @@ function dispatcher (hooks) {
   var stateCalled = false
   var subsCalled = false
 
+  var stopped = false
+
   const subscriptions = start._subscriptions = {}
   const reducers = start._reducers = {}
   const effects = start._effects = {}
@@ -38,6 +40,7 @@ function dispatcher (hooks) {
   start.state = getState
   start.start = start
   start.use = use
+  start.stop = stop
   return start
 
   // push an object of hooks onto an array
@@ -199,6 +202,8 @@ function dispatcher (hooks) {
     // call an action
     // (str, str, any, fn) -> null
     function _send (name, data, caller, cb) {
+      if (stopped) return
+
       assert.equal(typeof name, 'string', 'barracks._send: name should be a string')
       assert.equal(typeof caller, 'string', 'barracks._send: caller should be a string')
       assert.equal(typeof cb, 'function', 'barracks._send: cb should be a function')
@@ -249,6 +254,13 @@ function dispatcher (hooks) {
         }
       }, 0)
     }
+  }
+
+  // stop an app, essentially turns
+  // all send() calls into no-ops.
+  // () -> null
+  function stop () {
+    stopped = true
   }
 }
 

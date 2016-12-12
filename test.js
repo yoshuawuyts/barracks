@@ -29,6 +29,33 @@ tape('api: store.model()', (t) => {
 })
 
 tape('api: store.use()', (t) => {
+  t.test('should allow model injection', (t) => {
+    t.plan(1)
+    const store = barracks()
+    store.model({
+      state: { accessed: false }
+    })
+    store.use({
+      models: [{
+        namespace: 'namespaced',
+        state: { 'accessed': false },
+        reducers: { update: (state, data) => data }
+      }, {
+        state: {},
+        reducers: { update: (state, data) => data }
+      }]
+    })
+    const createSend = store.start()
+    const send = createSend('test', true)
+    send('namespaced:update', { accessed: true })
+    send('update', { accessed: true })
+
+    setTimeout(function () {
+      const expected = { accessed: true, namespaced: { accessed: true } }
+      t.deepEqual(store.state(), expected, 'models can be injected')
+    }, 100)
+  })
+
   t.test('should call multiples', (t) => {
     t.plan(1)
     const store = barracks()

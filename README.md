@@ -51,6 +51,7 @@ is passed to `.use()`.
 Register new hooks on the store. Hooks are little plugins that can extend
 behavior or perform actions at specific points in the life cycle. The following
 hooks are possible:
+- __models:__ an array of models that will be merged with the store.
 - __onError(err, state, createSend):__ called when an `effect` or
   `subscription` emit an error; if no hook is passed, the default hook will
   `throw` on each error

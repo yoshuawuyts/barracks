@@ -58,6 +58,7 @@ function dispatcher (hooks) {
     if (hooks.wrapInitialState) initialStateWraps.push(hooks.wrapInitialState)
     if (hooks.wrapReducers) reducerWraps.push(hooks.wrapReducers)
     if (hooks.wrapEffects) effectWraps.push(hooks.wrapEffects)
+    if (hooks.models) hooks.models.forEach(setModel)
   }
 
   // push a model to be initiated

@@ -11,15 +11,13 @@
   "repository": "yoshuawuyts/barracks",
   "keywords": [
     "action",
-    "dispatcher",
-    "emitter",
-    "event",
-    "flux",
-    "minimal",
-    "react",
-    "react-component"
+    "dispatcher"
   ],
   "license": "MIT",
+  "dependencies": {
+    "nanotick": "^1.1.2",
+    "xtend": "^4.0.1"
+  },
   "devDependencies": {
     "bundle-collapser": "^1.2.1",
     "coveralls": "~2.11.12",
@@ -31,9 +29,6 @@
     "uglifyify": "^3.0.2",
     "unassertify": "^2.0.3",
     "watch": "^1.0.0"
-  },
-  "dependencies": {
-    "xtend": "^4.0.1"
   },
   "files": [
     "LICENSE",

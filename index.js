@@ -1,8 +1,9 @@
-const mutate = require('xtend/mutable')
-const assert = require('assert')
-const xtend = require('xtend')
+var mutate = require('xtend/mutable')
+var nanotick = require('nanotick')
+var assert = require('assert')
+var xtend = require('xtend')
 
-const applyHook = require('./apply-hook')
+var applyHook = require('./apply-hook')
 
 module.exports = dispatcher
 
@@ -12,14 +13,14 @@ function dispatcher (hooks) {
   hooks = hooks || {}
   assert.equal(typeof hooks, 'object', 'barracks: hooks should be undefined or an object')
 
-  const onStateChangeHooks = []
-  const onActionHooks = []
-  const onErrorHooks = []
+  var onStateChangeHooks = []
+  var onActionHooks = []
+  var onErrorHooks = []
 
-  const subscriptionWraps = []
-  const initialStateWraps = []
-  const reducerWraps = []
-  const effectWraps = []
+  var subscriptionWraps = []
+  var initialStateWraps = []
+  var reducerWraps = []
+  var effectWraps = []
 
   use(hooks)
 
@@ -27,20 +28,22 @@ function dispatcher (hooks) {
   var effectsCalled = false
   var stateCalled = false
   var subsCalled = false
-
   var stopped = false
 
-  const subscriptions = start._subscriptions = {}
-  const reducers = start._reducers = {}
-  const effects = start._effects = {}
-  const models = start._models = []
+  var subscriptions = start._subscriptions = {}
+  var reducers = start._reducers = {}
+  var effects = start._effects = {}
+  var models = start._models = []
   var _state = {}
+
+  var tick = nanotick()
 
   start.model = setModel
   start.state = getState
   start.start = start
-  start.use = use
   start.stop = stop
+  start.use = use
+
   return start
 
   // push an object of hooks onto an array
@@ -74,20 +77,20 @@ function dispatcher (hooks) {
     opts = opts || {}
     assert.equal(typeof opts, 'object', 'barracks.store.state: opts should be an object')
 
-    const state = opts.state
+    var state = opts.state
     if (!opts.state && opts.freeze === false) return xtend(_state)
     else if (!opts.state) return Object.freeze(xtend(_state))
     assert.equal(typeof state, 'object', 'barracks.store.state: state should be an object')
 
-    const namespaces = []
-    const newState = {}
+    var namespaces = []
+    var newState = {}
 
     // apply all fields from the model, and namespaced fields from the passed
     // in state
     models.forEach(function (model) {
-      const ns = model.namespace
+      var ns = model.namespace
       namespaces.push(ns)
-      const modelState = model.state || {}
+      var modelState = model.state || {}
       if (ns) {
         newState[ns] = newState[ns] || {}
         apply(ns, modelState, newState)
@@ -103,8 +106,8 @@ function dispatcher (hooks) {
       newState[key] = state[key]
     })
 
-    const tmpState = xtend(_state, xtend(state, newState))
-    const wrappedState = wrapHook(tmpState, initialStateWraps)
+    var tmpState = xtend(_state, xtend(state, newState))
+    var wrappedState = wrapHook(tmpState, initialStateWraps)
 
     return (opts.freeze === false)
       ? wrappedState
@@ -119,9 +122,9 @@ function dispatcher (hooks) {
 
     // register values from the models
     models.forEach(function (model) {
-      const ns = model.namespace
+      var ns = model.namespace
       if (!stateCalled && model.state && opts.state !== false) {
-        const modelState = model.state || {}
+        var modelState = model.state || {}
         if (ns) {
           _state[ns] = _state[ns] || {}
           apply(ns, modelState, _state)
@@ -141,7 +144,7 @@ function dispatcher (hooks) {
       }
       if (!subsCalled && model.subscriptions && opts.subscriptions !== false) {
         apply(ns, model.subscriptions, subscriptions, function (cb, key) {
-          const send = createSend('subscription: ' + (ns ? ns + ':' + key : key))
+          var send = createSend('subscription: ' + (ns ? ns + ':' + key : key))
           cb = wrapHook(cb, subscriptionWraps)
           cb(send, function (err) {
             applyHook(onErrorHooks, err, _state, createSend)
@@ -182,7 +185,7 @@ function dispatcher (hooks) {
         assert.equal(typeof name, 'string', 'barracks.store.start.send: name should be a string')
         assert.ok(!cb || typeof cb === 'function', 'barracks.store.start.send: cb should be a function')
 
-        const done = callOnError ? onErrorCallback : cb
+        var done = callOnError ? onErrorCallback : cb
         _send(name, data, selfName, done)
 
         function onErrorCallback (err) {
@@ -209,10 +212,10 @@ function dispatcher (hooks) {
       assert.equal(typeof caller, 'string', 'barracks._send: caller should be a string')
       assert.equal(typeof cb, 'function', 'barracks._send: cb should be a function')
 
-      setTimeout(function () {
+      ;(tick(function () {
         var reducersCalled = false
         var effectsCalled = false
-        const newState = xtend(_state)
+        var newState = xtend(_state)
 
         if (onActionHooks.length) {
           applyHook(onActionHooks, _state, data, name, caller, createSend)
@@ -221,15 +224,15 @@ function dispatcher (hooks) {
         // validate if a namespace exists. Namespaces are delimited by ':'.
         var actionName = name
         if (/:/.test(name)) {
-          const arr = name.split(':')
+          var arr = name.split(':')
           var ns = arr.shift()
           actionName = arr.join(':')
         }
 
-        const _reducers = ns ? reducers[ns] : reducers
+        var _reducers = ns ? reducers[ns] : reducers
         if (_reducers && _reducers[actionName]) {
           if (ns) {
-            const reducedState = _reducers[actionName](_state[ns], data)
+            var reducedState = _reducers[actionName](_state[ns], data)
             newState[ns] = xtend(_state[ns], reducedState)
           } else {
             mutate(newState, reducers[actionName](_state, data))
@@ -242,9 +245,9 @@ function dispatcher (hooks) {
           cb(null, newState)
         }
 
-        const _effects = ns ? effects[ns] : effects
+        var _effects = ns ? effects[ns] : effects
         if (!reducersCalled && _effects && _effects[actionName]) {
-          const send = createSend('effect: ' + name)
+          var send = createSend('effect: ' + name)
           if (ns) _effects[actionName](_state[ns], data, send, cb)
           else _effects[actionName](_state, data, send, cb)
           effectsCalled = true
@@ -253,7 +256,7 @@ function dispatcher (hooks) {
         if (!reducersCalled && !effectsCalled) {
           throw new Error('Could not find action ' + actionName)
         }
-      }, 0)
+      }))()
     }
   }
 
@@ -272,7 +275,7 @@ function dispatcher (hooks) {
 function apply (ns, source, target, wrap) {
   if (ns && !target[ns]) target[ns] = {}
   Object.keys(source).forEach(function (key) {
-    const cb = wrap ? wrap(source[key], key) : source[key]
+    var cb = wrap ? wrap(source[key], key) : source[key]
     if (ns) target[ns][key] = cb
     else target[key] = cb
   })

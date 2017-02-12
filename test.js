@@ -490,19 +490,13 @@ tape('handlers: subscriptions', (t) => {
 
 tape('hooks: onStateChange', (t) => {
   t.test('should be called whenever state changes', (t) => {
-    t.plan(5)
-    var called = false
+    t.plan(4)
     const store = barracks({
       onStateChange: (state, data, prev, caller, createSend) => {
-        if (!called) {
-          t.deepEqual(state, { count: 1 }, 'state is equal on first try')
-          called = true
-        } else {
-          t.deepEqual(data, { count: 3 }, 'action is equal')
-          t.deepEqual(state, { count: 4 }, 'state is equal')
-          t.deepEqual(prev, { count: 1 }, 'prev is equal')
-          t.equal(caller, 'increment', 'caller is equal')
-        }
+        t.deepEqual(data, { count: 3 }, 'action is equal')
+        t.deepEqual(state, { count: 4 }, 'state is equal')
+        t.deepEqual(prev, { count: 1 }, 'prev is equal')
+        t.equal(caller, 'increment', 'caller is equal')
       }
     })
 
@@ -519,19 +513,12 @@ tape('hooks: onStateChange', (t) => {
   })
 
   t.test('should allow triggering other actions', (t) => {
-    t.plan(4)
-    var called = false
+    t.plan(2)
     const store = barracks({
       onStateChange: function (state, data, prev, caller, createSend) {
-        if (!called) {
-          t.pass('onStateChange called')
-          t.equal(caller, 'init', "caller was 'init'")
-          called = true
-        } else {
-          t.pass('onStateChange called')
-          const send = createSend('test:onStateChange', true)
-          send('foo')
-        }
+        t.pass('onStateChange called')
+        const send = createSend('test:onStateChange', true)
+        send('foo')
       }
     })
 
@@ -555,15 +542,10 @@ tape('hooks: onStateChange', (t) => {
 
   t.test('previous state should not be mutated', (t) => {
     t.plan(2)
-    var initialized = false
     const storeNS = barracks({
       onStateChange: (state, data, prev, caller, createSend) => {
-        if (!initialized) {
-          initialized = true
-        } else {
-          t.equal(state.ns.items.length, 3, 'state was updated')
-          t.equal(prev.ns.items.length, 0, 'prev was left as-is')
-        }
+        t.equal(state.ns.items.length, 3, 'state was updated')
+        t.equal(prev.ns.items.length, 0, 'prev was left as-is')
       }
     })
 

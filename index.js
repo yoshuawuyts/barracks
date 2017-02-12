@@ -158,9 +158,6 @@ function dispatcher (hooks) {
     // state rather than indvidual chunks, so we apply it outside the loop
     if (!stateCalled && opts.state !== false) {
       _state = wrapHook(_state, initialStateWraps)
-      if (onStateChangeHooks.length) {
-        applyHook(onStateChangeHooks, _state, {}, {}, 'init', createSend)
-      }
     }
 
     if (!opts.noSubscriptions) subsCalled = true

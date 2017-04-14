@@ -24,7 +24,7 @@
     "es2020": "^1.1.6",
     "istanbul": "~0.4.5",
     "noop2": "^2.0.0",
-    "standard": "^8.0.0",
+    "standard": "^10.0.2",
     "tape": "^4.6.0",
     "uglifyify": "^3.0.2",
     "unassertify": "^2.0.3",

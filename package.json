@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "bundle-collapser": "^1.2.1",
-    "coveralls": "~2.11.12",
+    "coveralls": "~2.13.1",
     "es2020": "^1.1.6",
     "istanbul": "~0.4.5",
     "noop2": "^2.0.0",
